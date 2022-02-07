@@ -1,0 +1,136 @@
+.Applink {
+  color: #61dafb;
+}
+
+.container {
+  width: 80%;
+  max-width: 400px;
+  min-width: 328px;
+  height: fit-content;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+
+  border-style: solid;
+  border-radius: 30px;
+  border-width: 1px;
+
+  text-align: center;
+}
+
+.logo {
+  max-width: 100px;
+  margin: 0px;
+  margin-top: 10px;
+}
+
+.logo:hover {
+  cursor: pointer;
+}
+
+.signup_text {
+  margin-top: 10px;
+  font-size: 25pt;
+}
+
+.input_div {
+  margin: auto;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  margin-top: 10px;
+
+  width: 80%;
+  height: 56px;
+
+  font-size: 15pt;
+
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.email {
+  border-style: none;
+  display: inline-block;
+
+  height: 100%;
+  width: 60%;
+  padding: 0px;
+
+  margin-left: -14px;
+
+  font-size: 15pt;
+}
+
+.password {
+  padding-left: 10px;
+  border-style: none;
+  display: inline-block;
+
+  height: 100%;
+  width: 95%;
+  padding: 0px;
+  padding-left: 14px;
+
+  font-size: 15pt;
+}
+
+.email:focus, .password:focus {
+  outline: none;
+}
+
+.input_span {
+  display: inline-block;
+  font-size: 15pt;
+  margin-left: 2px;
+}
+
+.typing_error {
+  text-align: center;
+  color: red;
+  max-width: 332px;
+  margin: auto;
+  margin-top: 5px;
+}
+
+.bottom_div {
+  margin-top: 20%;
+  margin-bottom: 30px;
+  margin-left: 35px;
+  margin-right: 35px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selectors_div {
+  margin: 0px;
+  margin-bottom: -30px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.loading_circle {
+  margin-top: 50px;
+  margin-bottom: -50px;
+  max-width: 100px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading_circle {
+    animation: loading_circle_spin infinite 1s linear;
+  }
+}
+
+@keyframes loading_circle_spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

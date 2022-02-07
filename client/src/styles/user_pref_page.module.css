@@ -1,0 +1,309 @@
+.Applink {
+  color: #61dafb;
+}
+
+.pfpContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pfpControls {
+  margin-top: 10px;
+}
+
+.userPfp {
+  border: solid white 3px;
+  border-radius: 50%;
+  padding: 3px;
+  max-width: 90px;
+}
+
+.pfpTextContainer {
+  margin-left: 10px;
+  margin-right: auto;
+}
+
+.pfpButtonsContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.send_pfp_btn {
+  font-size: 15pt;
+  /* margin-left: 20px; */
+  margin: 0;
+  width: fit-content;
+}
+
+.pfp_text {
+  font-size: 20pt;
+  margin: 0;
+}
+
+.pfp_input {
+  display: none;
+}
+
+.pageBody {
+  display: flex;
+}
+
+.sidebar {
+  z-index: 2;
+  display: block;
+  position: fixed;
+  height: 48px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 80px;
+  margin-left: 60px;
+}
+
+.restOfPage {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 80px;
+  margin-left: 270px;
+}
+
+.pref_container {
+  left: 0;
+  width: fit-content;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.settings_list {
+  padding-left: 0px;
+}
+
+.settings_list li {
+  list-style-type: none;
+
+  padding-bottom: 20px;
+  padding-top: 20px;
+
+
+  border-bottom: solid grey 1px;
+
+}
+
+.settings_list li:last-child {
+  border: none;
+  padding-bottom: 0px;
+}
+
+.settings_list li:first-child {
+  padding-top: 0px;
+}
+
+.subject_list {
+  padding-left: 20px;
+}
+
+.subject_list li {
+  list-style-type: none;
+
+  padding-bottom: 5px;
+  padding-top: 5px;
+
+  border-bottom: solid grey 1px;
+}
+
+.verifification {
+  font-size: 20pt;
+  margin: 0;
+}
+
+.verified {
+  color: #1EB100;
+}
+
+.not_verified {
+  color: #ED230D;
+}
+
+.email_container {
+  width: fit-content;
+}
+
+.email_text {
+  font-size: 20pt;
+  margin: 0px;
+}
+
+.email2Field {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.emailBtnsContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.change_email_btn {
+  font-size: 15pt;
+  margin: 0;
+  width: fit-content;
+}
+
+.typing_error {
+  color: red;
+  margin: 0px;
+  overflow-wrap: normal;
+}
+
+.next_btn {
+  margin-top: 10px;
+}
+
+.profile_btn {
+  font-size: 24pt;
+  margin-bottom: 0px;
+  margin-top: 20px;
+}
+
+.settings_btn {
+  font-size: 24pt;
+  margin-bottom: 20px;
+  margin-top: 0px;
+}
+
+.input_div {
+  margin-right: 0;
+  margin: 0;
+
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+
+  height: 56px;
+
+  font-size: 15pt;
+
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.textarea_div {
+  margin-right: 0;
+  margin: 0;
+
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+
+  min-height: 56px;
+  max-height: 500px;
+  min-width: 305px;
+  max-width: 500px;
+  height: fit-content;
+  width: fit-content;
+
+  font-size: 15pt;
+
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.input_span {
+  display: inline-block;
+  font-size: 15pt;
+  margin-left: 2px;
+  right: 0;
+}
+
+.email_select {
+  font-size: 11pt;
+  height: 20px;
+}
+
+.arrowDown {
+  display: inline-block;
+}
+
+.email {
+  padding-left: 10px;
+  border-style: none;
+  display: inline-block;
+
+  margin: 0;
+
+  height: 100%;
+  width: 60%;
+  padding: 0px;
+
+  font-size: 15pt;
+}
+
+.password {
+  padding-left: 10px;
+  border-style: none;
+  display: inline-block;
+
+  margin: 0;
+
+  height: 100%;
+  width: 100%;
+  padding: 0px;
+
+  font-size: 15pt;
+}
+
+.email:focus, .password:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading_circle {
+    animation: loading_circle_spin infinite 1s linear;
+  }
+}
+
+@keyframes loading_circle_spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media screen and (max-width: 830px) {
+  .rows_container {
+    width: 100%;
+    min-width: fit-content;
+  }
+
+  .row {
+    display: initial;
+  }
+
+  .row_text_left {
+    margin-left: 5%;
+  }
+
+  .image {
+    width: 90%;
+    max-width: fit-content;
+    margin-left: 5%;
+    margin-right: 5%;
+  }
+
+  .horisontal_spacer {
+    margin-bottom: 100px;
+  }
+}
+
+@media screen and (max-width: 450px) {
+  .menu_bar_desktop {
+    display: none;
+  }
+
+  .menu_bar_mobile {
+    display: flex;
+  }
+}

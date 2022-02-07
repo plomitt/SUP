@@ -1,0 +1,19 @@
+{
+  "name": "sup",
+  "version": "1.0.0",
+  "description": "A web platform designed for students that need help, or want to help",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "timofey",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "image-to-base64": "^2.2.0",
+    "jquery": "^3.6.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}

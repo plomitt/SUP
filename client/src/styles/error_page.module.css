@@ -1,0 +1,41 @@
+.Applink {
+  color: #61dafb;
+}
+
+.container {
+  width: 80%;
+  max-width: 400px;
+  min-width: 136px;
+  height: fit-content;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+
+  border-style: solid;
+  border-radius: 30px;
+  border-width: 1px;
+
+  text-align: center;
+}
+
+.logo {
+  max-width: 100px;
+  margin: 0px;
+  margin-top: 10px;
+}
+
+.logo:hover {
+  cursor: pointer;
+}
+
+.error {
+  margin-top: 10px;
+  font-size: 25pt;
+}
+
+.text {
+  margin-bottom: 20px;
+}
