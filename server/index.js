@@ -1,43 +1,67 @@
 const express = require('express');
 const app = express();
-app.use(express.static('statics'));
-const cors = require('cors')
-app.use(cors())
 const session = require('express-session');
+
 const bodyParser = require('body-parser');
+const urlencodedParser = bodyParser.urlencoded({ extended: false, limit: '2mb' })
+
+const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const imageToBase64 = require('image-to-base64');
+
 const React = require('react');
 const ReactDOM = require('react-dom');
+
 const MongoDBStore = require('connect-mongodb-session')(session);
 const mongoose = require('mongoose');
-const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole } = require('./additional');
 mongoose.connect('mongodb://localhost:27017/sup', {useNewUrlParser: true, useUnifiedTopology: true});
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
   console.log('Connection to the Database is successful.')
 });
-const urlencodedParser = bodyParser.urlencoded({ extended: false, limit: '2mb' })
 
-/*const sessionStore = new MongoDBStore({
+const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole } = require('./additional');
+
+
+const sessionStore = new MongoDBStore({
   uri: 'mongodb://localhost:27017/sup',
-  collection: 'sessions'
+  collection: 'sessionstest'
 });
 
+app.use(cors({origin: 'http://localhost:3000', credentials: true}));
+app.use(bodyParser.json());
+app.use(express.static('statics'));
+
 app.use(session({
-  name: "sid",
+  genid: (req) => {
+    return uuidv4();
+  },
+  name: 'sid',
+  secret: '123',
   resave: false,
   saveUninitialized: false,
-  secret: "U5wURtE76YYUMB3B",
+  rolling: false,
   store: sessionStore,
   cookie: {
-      maxAge: 1000 * 60 * 60,
-      sameSite: true,
-      secure: false
+    maxAge: 1000 * 60 * 60,
+    httpOnly: true,
+    sameSite: true,
+    secure: false
   }
-}));*/
+}));
+
+app.get('/test', function(req, res) {
+  req.session.test = 'bruh';
+
+  res.render('./test.ejs');
+})
+
+app.use((req, res, next) => {
+  console.log(req.session);
+  next();
+})
 
 const userSchema = new mongoose.Schema({
   id: String,
@@ -50,6 +74,7 @@ const userSchema = new mongoose.Schema({
   password: String,
   phone: String,
   verified: Boolean,
+  accessLevel: Number,
   role: String,
   subjectsNeedHelp: Array,
   subjectsCanHelp: Array
@@ -131,18 +156,186 @@ function udpateUser(id, toUpdate) {
   })
 }
 
-function parseData(data) {
+function parseData(req, res, next) {
   try {
-    return JSON.parse(data);
+    req.app.locals.data = JSON.parse(req.body.data);
+    next();
   } catch (error) {
-    return false;
+    res.send({status: 'error'});
   }
 }
 
-app.post('/updateuserpreferences', urlencodedParser, function(req, res) {
+
+app.post('/signin', urlencodedParser, parseData, function(req, res) {
+  const data = req.app.locals.data;
+
+  const email = data[0];
+  const password = data[1];
+  const role = data[2];
+
+  req.session.test = 'bruh';
+
+  console.log(req.session);
+  
+  if (checkEmail(email) && checkPassword(password) && checkRole(role) === true) {
+    User.findOne({email: email, role: role})
+    .then(user => {
+      if (user === null) {
+        res.send({status: 'wrong'});
+      } else {
+        if (comparePasswords(password, user.password)) {
+          const sid = addSessionToDB(user.id);
+  
+          if (sid !== false) {
+            // req.session.userId = user.id;
+            // req.session.userAccessLevel = user.accessLevel;
+
+            res.send({
+              status: 'ok',
+              session: {id: sid, userId: user.id},
+              user: {
+                id: user.id,
+                pfp: user.pfp,
+                name: user.name,
+                surname: user.surname,
+                grade: user.grade,
+                bio: user.bio,
+                email: user.email,
+                phone: user.phone,
+                verified: user.verified,
+                role: user.role,
+                subjectsNeedHelp: user.subjectsNeedHelp,
+                subjectsCanHelp: user.subjectsCanHelp
+              }
+            });
+          } else {
+            res.send({status: 'error'});
+          }
+  
+        } else {
+          res.send({status: 'wrong'});
+        }
+      }
+    })
+  } else {
+    res.send({status: 'error'});
+  }
+
+});
+
+app.post('/signout', urlencodedParser, parseData, function(req, res) {
+  const session = req.app.locals.data;
+
+  Session.deleteOne({id: session.id})
+  .then(result => {
+    if (result.ok === 1) {
+      res.send('ok');
+    } else {
+      res.send('error');
+    }
+  })
+});
+
+app.post('/signup', urlencodedParser, parseData, function(req, res) {
+  const data = req.app.locals.data;
+
+  User.findOne({email: data[0], role: data[2]})
+  .then(user => {
+    if (user === null) {
+      if (checkEmail(data[0]) && checkPassword(data[1]) && checkRole(data[2]) === true) {
+        const encryptedPassword = encryptPassword(data[1]);
+        if (addUserToDB(data[0], encryptedPassword, data[2]) === true) {
+          res.send('ok');
+        } else {
+          res.send('error');
+        }
+      } else {
+        res.send('error');
+      }
+    } else {
+      res.send('email_taken');
+    }
+  })
+});
+
+app.post('/checksignin', urlencodedParser, parseData, function(req, res) {
+  const session = req.app.locals.data;
+
+  Session.findOne({id: session.id})
+  .then(session => {
+    res.send(session !== null);
+  })
+});
+
+app.post('/authorization', urlencodedParser, parseData, function(req, res) {
+  const data = req.app.locals.data;
+
+  const session = data[0];
+  const password = data[1];
+
+  Session.findOne({id: session.id})
+  .then(session => {
+    if (session !== null) {
+      User.findOne({id: session.userId})
+      .then(user => {
+        if (user !== null) {
+          const check = comparePasswords(password, user.password);
+          if (check === true) {
+            res.send('ok');
+          } else {
+            res.send('wrong');
+          }
+        } else {
+          res.send('error');
+        }
+      })
+    } else {
+      res.send('error');
+    }
+  })
+});
+
+app.post('/getuserdata', urlencodedParser, parseData, function(req, res) {
+  const session = req.app.locals.data;
+
+  Session.findOne({id: session.id})
+  .then(session => {
+    if (session !== null) {
+      User.findOne({id: session.userId})
+      .then(user => {
+        if (user !== null) {
+          res.send({
+            status: 'ok',
+            user: {
+              id: user.id,
+              pfp: user.pfp,
+              name: user.name,
+              surname: user.surname,
+              grade: user.grade,
+              bio: user.bio,
+              email: user.email,
+              phone: user.phone,
+              verified: user.verified,
+              role: user.role,
+              subjectsNeedHelp: user.subjectsNeedHelp,
+              subjectsCanHelp: user.subjectsCanHelp
+            }
+          })
+        } else {
+          res.send({status: 'error'});
+        }
+      })
+    } else {
+      res.send({status: 'error'});
+    }
+  })
+});
+
+app.post('/updateuserpreferences', urlencodedParser, parseData, function(req, res) {
   // console.log(req.socket.bytesRead)
 
-  const data = JSON.parse(req.body.data);
+  const data = req.app.locals.data;
+
   const dataSession = data[0];
   const dataToUpdateName = data[1];
 
@@ -183,191 +376,6 @@ app.post('/updateuserpreferences', urlencodedParser, function(req, res) {
       res.send({status: 'error'})
     }
   })
-});
-
-
-app.post('/signin', urlencodedParser, function(req, res) {
-  const data = parseData(req.body.data);
-
-  if (data !== false) {
-    const email = data[0];
-    const password = data[1];
-    const role = data[2];
-    
-    if (checkEmail(email) && checkPassword(password) && checkRole(role) === true) {
-      User.findOne({email: email, role: role})
-      .then(user => {
-        if (user === null) {
-          res.send({status: 'wrong'});
-        } else {
-          if (comparePasswords(password, user.password)) {
-            const sid = addSessionToDB(user.id);
-    
-            if (sid !== false) {
-              res.send({
-                status: 'ok',
-                session: {id: sid, userId: user.id},
-                user: {
-                  id: user.id,
-                  pfp: user.pfp,
-                  name: user.name,
-                  surname: user.surname,
-                  grade: user.grade,
-                  bio: user.bio,
-                  email: user.email,
-                  phone: user.phone,
-                  verified: user.verified,
-                  role: user.role,
-                  subjectsNeedHelp: user.subjectsNeedHelp,
-                  subjectsCanHelp: user.subjectsCanHelp
-                }
-              });
-            } else {
-              res.send({status: 'error'});
-            }
-    
-          } else {
-            res.send({status: 'wrong'});
-          }
-        }
-      })
-    } else {
-      res.send({status: 'error'});
-    }
-  } else {
-    res.send({status: 'error'});
-  }
-
-
-});
-
-app.post('/signout', urlencodedParser, function(req, res) {
-  const session = parseData(req.body.data);
-
-  if (session !== false) {
-    Session.deleteOne({id: session.id})
-    .then(result => {
-      if (result.ok === 1) {
-        res.send('ok');
-      } else {
-        res.send('error');
-      }
-    })
-  } else {
-    res.send('error');
-  }
-});
-
-app.post('/signup', urlencodedParser, function(req, res) {
-  const data = parseData(req.body.data);
-
-  if (data !== false) {
-    User.findOne({email: data[0], role: data[2]})
-    .then(user => {
-      if (user === null) {
-        if (checkEmail(data[0]) && checkPassword(data[1]) && checkRole(data[2]) === true) {
-          const encryptedPassword = encryptPassword(data[1]);
-          if (addUserToDB(data[0], encryptedPassword, data[2]) === true) {
-            res.send('ok');
-          } else {
-            res.send('error');
-          }
-        } else {
-          res.send('error');
-        }
-      } else {
-        res.send('email_taken');
-      }
-    })
-  } else {
-    res.send('error');
-  }
-});
-
-app.post('/checksignin', urlencodedParser, function(req, res) {
-  const session = parseData(req.body.data);
-
-  if (session !== false) {
-    Session.findOne({id: session.id})
-    .then(session => {
-      res.send(session !== null);
-  })
-  } else {
-    res.send('error');
-  }
-});
-
-app.post('/authorization', urlencodedParser, function(req, res) {
-  const data = parseData(req.body.data);
-
-  if (data !== false) {
-    const session = data[0];
-    const password = data[1];
-  
-    Session.findOne({id: session.id})
-    .then(session => {
-      if (session !== null) {
-        User.findOne({id: session.userId})
-        .then(user => {
-          if (user !== null) {
-            const check = comparePasswords(password, user.password);
-            if (check === true) {
-              res.send('ok');
-            } else {
-              res.send('wrong');
-            }
-          } else {
-            res.send('error');
-          }
-        })
-      } else {
-        res.send('error');
-      }
-    })
-  } else {
-    res.send('error');
-  }
-
-});
-
-app.post('/getuserdata', urlencodedParser, function(req, res) {
-  const session = parseData(req.body.data);
-
-  if (session !== false) {
-    Session.findOne({id: session.id})
-    .then(session => {
-      if (session !== null) {
-        User.findOne({id: session.userId})
-        .then(user => {
-          if (user !== null) {
-            res.send({
-              status: 'ok',
-              user: {
-                id: user.id,
-                pfp: user.pfp,
-                name: user.name,
-                surname: user.surname,
-                grade: user.grade,
-                bio: user.bio,
-                email: user.email,
-                phone: user.phone,
-                verified: user.verified,
-                role: user.role,
-                subjectsNeedHelp: user.subjectsNeedHelp,
-                subjectsCanHelp: user.subjectsCanHelp
-              }
-            })
-          } else {
-            res.send({status: 'error'});
-          }
-        })
-      } else {
-        res.send({status: 'error'});
-      }
-    })
-  } else {
-    res.send({status: 'error'});
-  }
 });
 
 var server = app.listen(8888, function() {
