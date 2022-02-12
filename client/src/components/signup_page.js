@@ -108,7 +108,7 @@ class SignupForm extends React.Component {
               } else {
                 localStorage.setItem('session', JSON.stringify(response.session));
                 localStorage.setItem('user', JSON.stringify(response.user));
-                window.location.href = '/userpreferences';
+                this.props.history.push('/userpreferences');
               }
             })
           }
@@ -178,7 +178,7 @@ class SignupForm extends React.Component {
     return (
       <div>
         <div className={style.container}>
-          <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { window.location.href = '/' }}></img>
+          <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { this.props.history.push('/') }}></img>
           <p className={style.signup_text}>{languages[this.props.language].signup_page.signup_text}</p>
           <StyledInputDiv>
             <StyledInput className={style.email} id='email' type='text' placeholder='Email' required autoFocus onKeyUp={(e) => { if (e.key === 'Enter') { this.handleClick() } }}></StyledInput>
@@ -197,7 +197,7 @@ class SignupForm extends React.Component {
           {passwordIncorrect}
           {loadingCircle}
           <div className={style.bottom_div}>
-            <StyledP onClick={() => { window.location.href = '/signin' }}>{languages[this.props.language].signup_page.signin_text}</StyledP>
+            <StyledP onClick={() => { this.props.history.push('/signin') }}>{languages[this.props.language].signup_page.signin_text}</StyledP>
             <Button id='next_btn' className={style.next_btn} onClick={() => {this.handleClick()}}>{languages[this.props.language].signup_page.next_btn}</Button>
           </div>
           <div className={style.selectors_div}>

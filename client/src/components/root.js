@@ -14,31 +14,31 @@ class Root extends React.Component {
     const context = this;
 
     if (page === 'landing') {
-      return <LandingPage language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+      return <LandingPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
 
     if (page === 'signin') {
-      return <SigninPage language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+      return <SigninPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
 
     if (page === 'signup') {
-      return <SignupPage language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+      return <SignupPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
 
     if (page === 'authorization') {
-      return <AuthorizationPage destination={context.props.destination} controlState={context.props.controlState} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+      return <AuthorizationPage history={context.props.history} destination={context.props.destination} controlState={context.props.controlState} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
 
     if (page === 'error') {
-      return <ErrorPage error={context.props.error} language={context.props.language} />
+      return <ErrorPage history={context.props.history} error={context.props.error} language={context.props.language} />
     }
 
     if (page === 'userpreferences') {
-      return <UserPreferencesPage controlState={context.props.controlState} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage} />
+      return <UserPreferencesPage history={context.props.history} controlState={context.props.controlState} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage} />
     }
 
     if (page === 'work') {
-      return <WorkPage language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+      return <WorkPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
   }
 }

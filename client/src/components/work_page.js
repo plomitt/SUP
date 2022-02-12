@@ -35,7 +35,7 @@ class Page extends React.Component {
 
     return (
       <div>
-        <Menu theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
+        <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
         <div id='pageBody'>
           {logOutError}
           <p className={style.signin_text}>SUP | Work</p>

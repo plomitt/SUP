@@ -15,9 +15,9 @@ function ErrorPage(props) {
 
   return (
     <div className={style.container}>
-      <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { window.location.href = '/' }}></img>
+      <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
       <p className={style.error}>{props.error}: {languages[props.language].error_page[props.error]}</p>
-      <p className={style.text}>{languages[props.language].error_page.go_back.split(' ')[0]} <StyledA className={style.link} href='/' onClick={() => { window.history.back() }}>{languages[props.language].error_page.go_back.split(' ')[1]}</StyledA></p>
+      <p className={style.text}>{languages[props.language].error_page.go_back.split(' ')[0]} <StyledA className={style.link} href='/' onClick={() => { props.history.back() }}>{languages[props.language].error_page.go_back.split(' ')[1]}</StyledA></p>
     </div>
   );
 }

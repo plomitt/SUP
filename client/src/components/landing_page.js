@@ -3,7 +3,6 @@ import { withTheme } from 'styled-components';
 import style from '../styles/landing_page.module.css';
 import { Button, Menu, Footer } from '../utils/additional';
 import languages from '../utils/languages';
-import { createBrowserHistory } from 'history';
 
 function Rows(props) {
   const rows_content = languages[props.language].landing_page.rows;
@@ -14,7 +13,7 @@ function Rows(props) {
 
   for (let i = 0; i < row_names.length; i++) {
     const row_name = row_names[i];
-    rowsToShow.push(<Row key={row_name} rowNumber={i} title={rows_content[row_name].title} text={rows_content[row_name].text} image={rows_content[row_name].image} language={props.language} />);
+    rowsToShow.push(<Row history={props.history} key={row_name} rowNumber={i} title={rows_content[row_name].title} text={rows_content[row_name].text} image={rows_content[row_name].image} language={props.language} />);
     rowsToShow.push(<span key={'sp' + i} className={style.horisontal_spacer}></span>);
   }
 
@@ -32,7 +31,7 @@ function Row(props) {
   if (props.rowNumber % 2 === 0 || window.innerWidth <= 830) {
     toShow = (
       <div className={style.row}>
-        <Text position='row_text_left' rowNumber={props.rowNumber} title={props.title} text={props.text} language={props.language} />
+        <Text position='row_text_left' history={props.history} rowNumber={props.rowNumber} title={props.title} text={props.text} language={props.language} />
         <Image image={props.image} />
       </div>
     )
@@ -40,7 +39,7 @@ function Row(props) {
     toShow = (
       <div className={style.row}>
         <Image image={props.image} />
-        <Text position='row_text_right' rowNumber={props.rowNumber} title={props.title} text={props.text} language={props.language}/>
+        <Text position='row_text_right' history={props.history} rowNumber={props.rowNumber} title={props.title} text={props.text} language={props.language}/>
       </div>
     )
   }
@@ -62,8 +61,8 @@ function Text(props) {
         <p className={style.text}>{props.text}</p>
         <div className={style.buttons_container}>
           <div>
-            <Button className={style.signin_btn} onClick={() => { history.push('/signin') }}>{languages[props.language].general.menu.signin_btn}</Button>
-            <Button onClick={() => { history.push('/signup') }}>{languages[props.language].general.create_account}</Button>
+            <Button className={style.signin_btn} onClick={() => { props.history.push('/signin') }}>{languages[props.language].general.menu.signin_btn}</Button>
+            <Button onClick={() => { props.history.push('/signup') }}>{languages[props.language].general.create_account}</Button>
           </div>
         </div>
       </div>
@@ -123,9 +122,9 @@ class LandingPage extends React.Component {
   render() {
     return (
       <div>
-        <Menu theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
+        <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
         <div id='pageBody'>
-          <Rows language={this.props.language}/>
+          <Rows history={this.props.history} language={this.props.language}/>
         </div>
         <Footer />
       </div>

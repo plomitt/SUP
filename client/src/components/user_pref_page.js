@@ -1474,7 +1474,7 @@ class UserPreferencesPage extends React.Component {
 
     return (
       <div>
-        <Menu theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
+        <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
         <div id='pageBody' className={style.pageBody}>
           <MessagePopUp showMessage={this.state.showMessage} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
           <Sidebar language={this.props.language} tab={this.state.tab} setTab={this.setTab} />

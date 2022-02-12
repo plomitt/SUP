@@ -7,6 +7,8 @@ import Root from './components/root.js';
 import { router } from './utils/router.js';
 import { createBrowserHistory } from 'history';
 
+let history = createBrowserHistory();
+
 let state = {
   page: 'landing'
 };
@@ -60,22 +62,28 @@ function changeTheme(themeName) {
   localStorage.setItem('theme', themeName);
 }
 
-setUpLangAndTheme();
-
-router(window.location.href)
-.then(res => {
-  state.page = res.page;
-  render();
-})
-
 function render() {
-  console.log(state);
   ReactDOM.render(
     <React.StrictMode>
       <ThemeProvider theme={state.theme}>
-          <Root page={state.page} language={state.language} changeTheme={changeTheme} changeLanguage={changeLanguage} />
+          <Root page={state.page} history={history} language={state.language} changeTheme={changeTheme} changeLanguage={changeLanguage} />
       </ThemeProvider>
     </React.StrictMode>,
     document.getElementById('root')
   );
 }
+
+function changePage(href) {
+  router(href, history)
+  .then(res => {
+    state.page = res.page;
+    render();
+  })
+}
+
+setUpLangAndTheme();
+changePage(window.location.href);
+
+history.listen(({action, location}) => {
+  changePage(location.pathname);
+})

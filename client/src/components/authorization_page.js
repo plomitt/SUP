@@ -69,7 +69,7 @@ class AuthPage extends React.Component {
         }
 
         if (response === 'error') {
-          signOut();
+          signOut(this.props.history);
         }
       })
     }
@@ -106,7 +106,7 @@ class AuthPage extends React.Component {
     return (
       <div>
         <Container className={style.container}>
-          <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { window.location.href = '/' }}></img>
+          <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { this.props.history.push('/') }}></img>
           <p className={style.signin_text}>{languages[this.props.language].signin_page.auth_text}</p>
           {passwordField}
           {passwordEmpty}

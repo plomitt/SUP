@@ -39,14 +39,6 @@ export function setUserData(name, data) {
   localStorage.setItem('user', JSON.stringify(user));
 }
 
-export function setUrlParam(param, value) {
-  let url = new URL(document.location);
-  let params = url.searchParams;
-
-  params.set(param, value);
-
-  window.location.href = url;
-}
 
 export function getUrlParam(param) {
   const params = (new URL(document.location)).searchParams;
@@ -157,7 +149,7 @@ export function checkIfUserSignedIn() {
   return sendRequest('/checksignin', 'POST', {data: session});
 }
 
-export function updateUserData() {
+export function updateUserData(history) {
   const session = localStorage.getItem('session');
 
   if (session !== null) {
@@ -168,7 +160,7 @@ export function updateUserData() {
       }
 
       if (response.status === 'error') {
-        signOut();
+        signOut(history);
       }
     })
   }
@@ -336,14 +328,14 @@ export function sendRequest(path, method, data) {
   })
 }
 
-export function signOut() {
+export function signOut(history) {
   try {
     const session = localStorage.getItem('session');
   
     sendRequest('/signout', 'POST', {data: session});
     localStorage.removeItem('session');
     localStorage.removeItem('user');
-    window.location.href = '/';
+    history.push('/');
   } catch (e) {}
 }
 
@@ -573,25 +565,25 @@ function MenuBarDesktop(props) {
   if (session === null) {
     return (
       <StyledMenuBar className={style.menu_bar_desktop}>
-        <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { window.location.href = '/' }}></img>
+        <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
         <div className={style.flex_box}>
           <div className={style.selectors_div}>
             <ThemeSelector classname={style.theme_select} changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector>
             <LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector>
           </div>
-          <Button className={style.signin_btn} onClick={() => { window.location.href = '/signin' }}>{languages[props.language].landing_page.signin_btn}</Button>
+          <Button className={style.signin_btn} onClick={() => { props.history.push('/signin') }}>{languages[props.language].landing_page.signin_btn}</Button>
         </div>
       </StyledMenuBar>
     )
   } else {
     return (
       <StyledMenuBar className={style.menu_bar_desktop}>
-        <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { window.location.href = '/' }}></img>
-        <MenuBarCenterText style={style} language={props.language} />
+        <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
+        <MenuBarCenterText history={props.history} style={style} language={props.language} />
         <DropdownContainer className={style.flex_box}>
           <div className={style.menubar_spacer}></div>
-          <PFP theme={props.theme} type={'desktop_menubar_pfp'} onClick={() => { window.location.href = '/userpreferences' }}/>
-          <MenuBarDesktopDropdown style={style} changeTheme={props.changeTheme} changeLanguage={props.changeLanguage} language={props.language} />
+          <PFP theme={props.theme} type={'desktop_menubar_pfp'} onClick={() => { props.history.push('/userpreferences') }}/>
+          <MenuBarDesktopDropdown history={props.history} style={style} changeTheme={props.changeTheme} changeLanguage={props.changeLanguage} language={props.language} />
         </DropdownContainer>
       </StyledMenuBar>
     )
@@ -599,40 +591,38 @@ function MenuBarDesktop(props) {
 }
 
 function MenuBarCenterText(props) {
-  const href = window.location.href;
-  const array = href.split('/')
-  const destination = array[array.length - 1];
+  const destination = props.history.location.pathname;
 
-  if (destination === 'work') {
+  if (destination === '/work') {
     return (
       <div className={style.flex_box}>
-        <StyledSelectedText onClick={() => window.location.href = '/work'}>{languages[props.language].general.menu.work}</StyledSelectedText>
-        <StyledMenuCenterText onClick={() => window.location.href = '/talent'} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
-        <StyledMenuCenterText onClick={() => window.location.href = '/myjobs'}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
+        <StyledSelectedText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledSelectedText>
+        <StyledMenuCenterText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
-  } else if (destination === 'talent') {
+  } else if (destination === '/talent') {
     return (
       <div className={style.flex_box}>
-        <StyledMenuCenterText onClick={() => window.location.href = '/work'}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
-        <StyledSelectedText onClick={() => window.location.href = '/talent'} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledSelectedText>
-        <StyledMenuCenterText onClick={() => window.location.href = '/myjobs'}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
+        <StyledSelectedText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledSelectedText>
+        <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
-  } else if (destination === 'myjobs') {
+  } else if (destination === '/myjobs') {
     return (
       <div className={style.flex_box}>
-        <StyledMenuCenterText onClick={() => window.location.href = '/work'}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
-        <StyledMenuCenterText onClick={() => window.location.href = '/talent'} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
-        <StyledSelectedText onClick={() => window.location.href = '/myjobs'}>{languages[props.language].general.menu.myjobs}</StyledSelectedText>
+        <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
+        <StyledSelectedText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledSelectedText>
       </div>
     )
   } else {
     return (
       <div className={style.flex_box}>
-        <StyledMenuCenterText onClick={() => window.location.href = '/work'}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
-        <StyledMenuCenterText onClick={() => window.location.href = '/talent'} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
-        <StyledMenuCenterText onClick={() => window.location.href = '/myjobs'}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
   }
@@ -642,10 +632,10 @@ function MenuBarDesktopDropdown(props) {
   return (
     <StyledDropdown className={style.menu_desktop_dropdown_container}>
       <StyledDesktopMenuBarDropdown>
-        <li><StyledText onClick={() => window.location.href = '/userpreferences'}>{languages[props.language].general.menu.link_user_pref_page}</StyledText></li>
+        <li><StyledText onClick={() => props.history.push('/userpreferences')}>{languages[props.language].general.menu.link_user_pref_page}</StyledText></li>
         <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
         <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-        <li><StyledText onClick={() => { signOut() }}>{languages[props.language].general.menu.signout_btn}</StyledText></li>
+        <li><StyledText onClick={() => { signOut(props.history) }}>{languages[props.language].general.menu.signout_btn}</StyledText></li>
       </StyledDesktopMenuBarDropdown>
     </StyledDropdown>
   )
@@ -681,8 +671,8 @@ function MenuBodyMobile(props) {
     return (
       <StyledDiv>
         <StyledMenuBarMobileUl>
-          <li><StyledP onClick={() => { window.location.href = '/' }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
-          <li><StyledP onClick={() => { window.location.href = '/signin' }}>{languages[props.language].general.menu.signin_btn}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/') }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/signin') }}>{languages[props.language].general.menu.signin_btn}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
           <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
         </StyledMenuBarMobileUl>
@@ -692,14 +682,14 @@ function MenuBodyMobile(props) {
     return (
       <StyledDiv>
         <StyledMenuBarMobileUl>
-          <li><StyledP onClick={() => { window.location.href = '/' }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
-          <li><StyledP onClick={() => { window.location.href = '/work' }}>{languages[props.language].general.menu.work}</StyledP></li>
-          <li><StyledP onClick={() => { window.location.href = '/talent' }}>{languages[props.language].general.menu.talent}</StyledP></li>
-          <li><StyledP onClick={() => { window.location.href = '/myjobs' }}>{languages[props.language].general.menu.myjobs}</StyledP></li>
-          <li><StyledP onClick={() => { window.location.href = '/userpreferences' }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/') }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/work') }}>{languages[props.language].general.menu.work}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/talent') }}>{languages[props.language].general.menu.talent}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/myjobs') }}>{languages[props.language].general.menu.myjobs}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
           <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-          <li><StyledP onClick={() => { signOut() }}>{languages[props.language].general.menu.signout_btn}</StyledP></li>
+          <li><StyledP onClick={() => { signOut(props.history) }}>{languages[props.language].general.menu.signout_btn}</StyledP></li>
         </StyledMenuBarMobileUl>
       </StyledDiv>
     )
@@ -761,18 +751,18 @@ export class Menu extends React.Component {
 
     if (this.state.menuType === 'desktop') {
       toShow = (
-        <MenuBarDesktop style={this.props.style} theme={this.props.theme} language={this.props.language} changeLanguage={this.props.changeLanguage} changeTheme={this.props.changeTheme}></MenuBarDesktop>
+        <MenuBarDesktop history={this.props.history} style={this.props.style} theme={this.props.theme} language={this.props.language} changeLanguage={this.props.changeLanguage} changeTheme={this.props.changeTheme}></MenuBarDesktop>
       )
     } else {
       if (this.state.showMenu === false) {
         toShow = (
-          <MenuBarMobile style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_normal} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
+          <MenuBarMobile history={this.props.history} style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_normal} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
         )
       } else {
         toShow = (
           <div>
-            <MenuBarMobile style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_x} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
-            <MenuBodyMobile style={this.props.style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} toggleMenu={this.toggleMenu}></MenuBodyMobile>
+            <MenuBarMobile history={this.props.history} style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_x} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
+            <MenuBodyMobile history={this.props.history} style={this.props.style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} toggleMenu={this.toggleMenu}></MenuBodyMobile>
           </div>
         )
       }

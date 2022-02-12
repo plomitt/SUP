@@ -1,6 +1,6 @@
 import { checkIfUserSignedIn } from './additional.js';
 
-export function router(href) {
+export function router(href, history) {
   const context = this;
   const array = href.split('/')
   const destination = array[array.length - 1].split('?')[0];
@@ -43,9 +43,9 @@ export function router(href) {
             })
           }
         } else if (isSignedIn === true && (destination === 'signin' || destination === 'signup')) {
-          window.location.href = '/work'
+          history.push('/work');
         } else if (isSignedIn === false && destination !== 'signin' && destination !== 'signup') {
-          window.location.href = '/signin'
+          history.push('/signin');
         } else if (isSignedIn === false && (destination === 'signin' || destination === 'signup')) {
           resolve({
             page: destination
