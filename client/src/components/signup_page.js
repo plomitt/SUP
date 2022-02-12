@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import style from '../styles/signup_page.module.css';
-import logo from '../sup_logo.png';
+import logo from '../media/sup_logo.png';
 import { withTheme } from 'styled-components';
-import { Button, SelectContainer, StyledSelect, ArrowDown, StyledInput, checkEmail, checkPassword, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, MessagePopUp } from './additional';
-import languages from './languages';
+import { Button, SelectContainer, StyledSelect, ArrowDown, StyledInput, checkEmail, checkPassword, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, MessagePopUp } from '../utils/additional';
+import languages from '../utils/languages';
 require('dotenv').config();
 
 const StyledP = styled.p`
@@ -39,8 +39,6 @@ class SignupForm extends React.Component {
 
   componentDidMount() {
     document.title = languages[this.props.language].general.page_titles.signup;
-
-    this.props.setUpLangAndTheme()
   }
 
   handleClick() {

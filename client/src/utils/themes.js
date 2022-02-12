@@ -1,9 +1,9 @@
-import white_circle from '../loading_circle_white.png';
-import black_circle from '../loading_circle_black.png';
-import hamburger_normal_white from '../hamburger_normal_white.png';
-import hamburger_normal_black from '../hamburger_normal_black.png';
-import hamburger_x_white from '../hamburger_x_white.png';
-import hamburger_x_black from '../hamburger_x_black.png';
+import white_circle from '../media/loading_circle_white.png';
+import black_circle from '../media/loading_circle_black.png';
+import hamburger_normal_white from '../media/hamburger_normal_white.png';
+import hamburger_normal_black from '../media/hamburger_normal_black.png';
+import hamburger_x_white from '../media/hamburger_x_white.png';
+import hamburger_x_black from '../media/hamburger_x_black.png';
 
 /*
 DARK

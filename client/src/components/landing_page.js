@@ -1,8 +1,9 @@
 import React from 'react';
 import { withTheme } from 'styled-components';
 import style from '../styles/landing_page.module.css';
-import { Button, Menu, Footer } from './additional';
-import languages from './languages';
+import { Button, Menu, Footer } from '../utils/additional';
+import languages from '../utils/languages';
+import { createBrowserHistory } from 'history';
 
 function Rows(props) {
   const rows_content = languages[props.language].landing_page.rows;
@@ -61,8 +62,8 @@ function Text(props) {
         <p className={style.text}>{props.text}</p>
         <div className={style.buttons_container}>
           <div>
-            <Button className={style.signin_btn} onClick={() => { window.location.href = '/signin' }}>{languages[props.language].general.menu.signin_btn}</Button>
-            <Button onClick={() => { window.location.href = '/signup' }}>{languages[props.language].general.create_account}</Button>
+            <Button className={style.signin_btn} onClick={() => { history.push('/signin') }}>{languages[props.language].general.menu.signin_btn}</Button>
+            <Button onClick={() => { history.push('/signup') }}>{languages[props.language].general.create_account}</Button>
           </div>
         </div>
       </div>
@@ -97,8 +98,6 @@ class LandingPage extends React.Component {
 
   componentDidMount() {
     document.title = languages[this.props.language].general.page_titles.landing;
-
-    this.props.setUpLangAndTheme();
 
     window.addEventListener('resize', this.windowSizeChanged);
   }

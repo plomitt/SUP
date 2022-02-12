@@ -1,4 +1,4 @@
-import placeholder from '../placeholder_orange.png';
+import placeholder from '../media/placeholder_orange.png';
 
 
 // const placeholderRows = {

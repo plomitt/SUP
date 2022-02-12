@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import style from '../styles/error_page.module.css';
-import logo from '../sup_logo.png';
+import logo from '../media/sup_logo.png';
 import { withTheme } from 'styled-components';
-import languages from './languages';
+import languages from '../utils/languages';
 require('dotenv').config();
 
 const StyledA = styled.a`

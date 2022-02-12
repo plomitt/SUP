@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import style from '../styles/signin_page.module.css';
-import logo from '../sup_logo.png';
+import logo from '../media/sup_logo.png';
 import { withTheme } from 'styled-components';
-import { Button, StyledInput, SelectContainer, StyledSelect, ArrowDown, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv } from './additional';
-import languages from './languages';
+import { Button, StyledInput, SelectContainer, StyledSelect, ArrowDown, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv } from '../utils/additional';
+import languages from '../utils/languages';
 require('dotenv').config();
 
 const StyledP = styled.p`
@@ -37,8 +37,6 @@ class SigninForm extends React.Component {
 
   componentDidMount() {
     document.title = languages[this.props.language].general.page_titles.signin;
-
-    this.props.setUpLangAndTheme();
   }
 
   handleClick() {

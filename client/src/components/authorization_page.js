@@ -1,9 +1,9 @@
 import React from 'react';
 import style from '../styles/signin_page.module.css';
-import logo from '../sup_logo.png';
+import logo from '../media/sup_logo.png';
 import styled, { withTheme } from 'styled-components';
-import { Button, StyledInput, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, signOut } from './additional';
-import languages from './languages';
+import { Button, StyledInput, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, signOut } from '../utils/additional';
+import languages from '../utils/languages';
 require('dotenv').config();
 
 
@@ -26,7 +26,6 @@ class AuthPage extends React.Component {
 
   componentDidMount() {
     document.title = languages[this.props.language].general.page_titles.auth;
-    this.props.setUpLangAndTheme();
   }
 
   handleClick() {

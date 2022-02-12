@@ -1,8 +1,8 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/user_pref_page.module.css';
-import { MessagePopUp, SelectContainer, StyledSelect, ArrowDown, StyledInput, Footer, Menu, getUrlParam, getUserData, setUserData, checkEmail, Button, sendRequest, checkPassword, LoadingCircle, PFP, checkName, capitalizeFirstLetter, checkBio, checkGrade, checkPhone, stringifyPhone, checkFile } from './additional';
-import languages from './languages';
+import { MessagePopUp, SelectContainer, StyledSelect, ArrowDown, StyledInput, Footer, Menu, getUrlParam, getUserData, setUserData, checkEmail, Button, sendRequest, checkPassword, LoadingCircle, PFP, checkName, capitalizeFirstLetter, checkBio, checkGrade, checkPhone, stringifyPhone, checkFile } from '../utils/additional';
+import languages from '../utils/languages';
 
 const StyledP = styled.p`
   color: ${props => props.theme.textColor};

@@ -32,7 +32,12 @@ const sessionStore = new MongoDBStore({
 
 app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 app.use(bodyParser.json());
-app.use(express.static('statics'));
+
+const handler = express.static('../client/build');
+const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work'];
+routes.forEach( route => app.use(route, handler) );
+
+
 
 app.use(session({
   genid: (req) => {
@@ -55,7 +60,7 @@ app.use(session({
 app.get('/test', function(req, res) {
   req.session.test = 'bruh';
 
-  res.render('./test.ejs');
+  res.render('./index.html');
 })
 
 app.use((req, res, next) => {
