@@ -55,10 +55,8 @@ class AuthPage extends React.Component {
       .then((response) => {
         
         if (response === 'ok') {
-          context.props.controlState({
-            authorized: true,
-            page: context.props.destination
-          });
+          localStorage.setItem('authorized', 'true');
+          this.props.history.push(context.props.destination);
         }
 
         if (response === 'wrong') {

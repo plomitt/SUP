@@ -1446,6 +1446,11 @@ class UserPreferencesPage extends React.Component {
         tab: param
       })
     }
+    
+    let unlisten = this.props.history.listen(({action, location}) => {
+      localStorage.setItem('authorized', 'false');
+      unlisten();
+    })
   }
 
   setTab(tab) {

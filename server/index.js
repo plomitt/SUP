@@ -10,9 +10,6 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const imageToBase64 = require('image-to-base64');
 
-const React = require('react');
-const ReactDOM = require('react-dom');
-
 const MongoDBStore = require('connect-mongodb-session')(session);
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/sup', {useNewUrlParser: true, useUnifiedTopology: true});
@@ -25,10 +22,10 @@ db.once('open', function() {
 const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole } = require('./additional');
 
 
-const sessionStore = new MongoDBStore({
-  uri: 'mongodb://localhost:27017/sup',
-  collection: 'sessionstest'
-});
+// const sessionStore = new MongoDBStore({
+//   uri: 'mongodb://localhost:27017/sup',
+//   collection: 'sessionstest'
+// });
 
 app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 app.use(bodyParser.json());
@@ -44,11 +41,11 @@ app.use(session({
     return uuidv4();
   },
   name: 'sid',
-  secret: '123',
+  secret: '[L5*BBJ"?Nf8{uM4',
   resave: false,
   saveUninitialized: false,
-  rolling: false,
-  store: sessionStore,
+  rolling: true,
+  // store: sessionStore,
   cookie: {
     maxAge: 1000 * 60 * 60,
     httpOnly: true,
@@ -56,12 +53,6 @@ app.use(session({
     secure: false
   }
 }));
-
-app.get('/test', function(req, res) {
-  req.session.test = 'bruh';
-
-  res.render('./index.html');
-})
 
 app.use((req, res, next) => {
   console.log(req.session);
@@ -177,10 +168,6 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
   const email = data[0];
   const password = data[1];
   const role = data[2];
-
-  req.session.test = 'bruh';
-
-  console.log(req.session);
   
   if (checkEmail(email) && checkPassword(password) && checkRole(role) === true) {
     User.findOne({email: email, role: role})
@@ -192,8 +179,8 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
           const sid = addSessionToDB(user.id);
   
           if (sid !== false) {
-            // req.session.userId = user.id;
-            // req.session.userAccessLevel = user.accessLevel;
+            req.session.sessionId = sid;
+            req.session.userId = user.id;
 
             res.send({
               status: 'ok',

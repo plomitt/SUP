@@ -1,7 +1,6 @@
 import { checkIfUserSignedIn } from './additional.js';
 
 export function router(href, history) {
-  const context = this;
   const array = href.split('/')
   const destination = array[array.length - 1].split('?')[0];
   const pages = ['', 'signin', 'signup', 'authorization', 'userpreferences', 'work']
@@ -27,7 +26,8 @@ export function router(href, history) {
           })
         } else if (isSignedIn === true && destination !== 'signin' && destination !== 'signup') {
           if (protectedPages.includes(destination) === true) {
-            if (context.state.authorized === true) {
+            const isAuthorized = localStorage.getItem('authorized');
+            if (isAuthorized === 'true') {
               resolve({
                 page: destination
               })
