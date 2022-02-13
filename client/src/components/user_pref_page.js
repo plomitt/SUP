@@ -122,7 +122,7 @@ function Verifification(props) {
             {languages[props.language].user_preferences_page.verifification['not_verified']}
           </span>
         </p>
-        <SelectedP onClick={() => {props.setMessage('Verification email was sent to your inbox')}} className={style.change_email_btn}>{languages[props.language].user_preferences_page.verifification.btn}</SelectedP>
+        <SelectedP onClick={() => {props.setMessage(languages[props.language].user_preferences_page.verifification.email_sent)}} className={style.change_email_btn}>{languages[props.language].user_preferences_page.verifification.btn}</SelectedP>
       </div>
     )
   }
@@ -223,9 +223,8 @@ class Email extends React.Component {
             showLoadingCircle: true
           })
         
-          const session = JSON.parse(localStorage.getItem('session'));
 
-          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'email', email1, role1])})
+          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['email', email1, role1])})
           .then(response => {
             this.setState({
               email1CheckResult: true,
@@ -407,9 +406,8 @@ class Password extends React.Component {
             password3CheckResult: true
           })
 
-          const session = JSON.parse(localStorage.getItem('session'));
 
-          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'password', password1])})
+          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['password', password1])})
           .then(response => {
             this.setState({
               password1CheckResult: true,
@@ -548,9 +546,7 @@ class Phone extends React.Component {
         showLoadingCircle: true
       })
 
-      const session = JSON.parse(localStorage.getItem('session'));
-
-      sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'phone', phoneNumber])})
+      sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['phone', phoneNumber])})
       .then(response => {
 
         if (response.status === 'success') {
@@ -707,12 +703,11 @@ class ProfilePictureMenu extends React.Component {
       reader.readAsDataURL(file);
   
       reader.onload = () => {
-        const session = JSON.parse(localStorage.getItem('session'));
         const image = (reader.result).split(',')[1];
 
         console.log(image);
   
-        sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'pfp', image])})
+        sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['pfp', image])})
         .then(response => {
           
           if (response.status === 'success') {
@@ -854,8 +849,7 @@ class NameMenu extends React.Component {
   }
 
   handleClick() {
-    const name = capitalizeFirstLetter(document.getElementById('name').value);
-    const nameCheck = checkName(name);
+    const nameCheck = checkName(document.getElementById('name').value);
 
     if (nameCheck === true) {
       this.setState({
@@ -863,7 +857,8 @@ class NameMenu extends React.Component {
         showSurnameField: true,
         showLoadingCircle: false
       })
-
+      
+      const name = capitalizeFirstLetter(document.getElementById('name').value);
       const surnameField = document.getElementById('surname');
       
       if (surnameField !== null) {
@@ -876,9 +871,7 @@ class NameMenu extends React.Component {
             showLoadingCircle: true
           })
           
-          const session = JSON.parse(localStorage.getItem('session'));
-
-          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'name', name, surname])})
+          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['name', name, surname])})
           .then(response => {
 
             if (response.status === 'success') {
@@ -925,14 +918,14 @@ class NameMenu extends React.Component {
     let nameIncorrect;
     if (this.state.nameCheck !== true) {
       nameIncorrect = (
-        <p className={style.typing_error}>{languages[this.props.language].user_preferences_page.name.name}{languages[this.props.language].general.name_error[this.state.nameCheck]}</p>
+        <p className={style.typing_error}>{languages[this.props.language].general.name_error[this.state.nameCheck]}</p>
       )
     }
 
     let surnameIncorrect;
     if (this.state.surnameCheck !== true) {
       surnameIncorrect = (
-        <p className={style.typing_error}>{languages[this.props.language].user_preferences_page.name.surname}{languages[this.props.language].general.name_error[this.state.surnameCheck]}</p>
+        <p className={style.typing_error}>{languages[this.props.language].general.surname_error[this.state.surnameCheck]}</p>
       )
     }
 
@@ -1027,9 +1020,7 @@ class GradeMenu extends React.Component {
         showLoadingCircle: true
       })
 
-      const session = JSON.parse(localStorage.getItem('session'));
-
-      sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'grade', grade])})
+      sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['grade', grade])})
       .then(response => {
 
         if (response.status === 'success') {
@@ -1157,9 +1148,7 @@ class BioMenu extends React.Component {
         showLoadingCircle: true
       })
 
-      const session = JSON.parse(localStorage.getItem('session'));
-
-      sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, 'bio', bio])})
+      sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['bio', bio])})
       .then(response => {
   
         if (response.status === 'success') {
@@ -1279,10 +1268,9 @@ class Subjects extends React.Component {
       showLoadingCircle: true
     })
 
-    const session = JSON.parse(localStorage.getItem('session'));
     const subjects = this.state.subjects;
 
-    sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([session, this.props.subjectsType, subjects])})
+    sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify([this.props.subjectsType, subjects])})
     .then(response => {
 
       if (response.status === 'success') {

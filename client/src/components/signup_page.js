@@ -106,7 +106,6 @@ class SignupForm extends React.Component {
                   showResponse: languages[this.props.language].general.server_error_text
                 })
               } else {
-                localStorage.setItem('session', JSON.stringify(response.session));
                 localStorage.setItem('user', JSON.stringify(response.user));
                 this.props.history.push('/userpreferences');
               }

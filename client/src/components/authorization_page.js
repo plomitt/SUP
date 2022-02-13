@@ -49,11 +49,8 @@ class AuthPage extends React.Component {
         showLoadingCircle: true
       })
 
-      const session = JSON.parse(localStorage.getItem('session'));
-
-      sendRequest('/authorization', 'POST', {data: JSON.stringify([session, password])})
-      .then((response) => {
-        
+      sendRequest('/authorization', 'POST', {data: JSON.stringify([password])})
+      .then((response) => {        
         if (response === 'ok') {
           localStorage.setItem('authorized', 'true');
           this.props.history.push(context.props.destination);
@@ -67,7 +64,8 @@ class AuthPage extends React.Component {
         }
 
         if (response === 'error') {
-          signOut(this.props.history);
+          signOut();
+          this.props.history.push('/');
         }
       })
     }

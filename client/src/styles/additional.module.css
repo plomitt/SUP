@@ -27,7 +27,7 @@
 
 .userprefpage_menubar_pfp:hover {
   cursor: pointer;
-  opacity: 80%;
+  opacity: 0.8;
 }
 
 .desktop_menubar_pfp:hover, .mobile_menubar_pfp:hover {

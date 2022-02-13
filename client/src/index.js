@@ -6,6 +6,7 @@ import themes from './utils/themes.js';
 import Root from './components/root.js';
 import { router } from './utils/router.js';
 import { createBrowserHistory } from 'history';
+import { updateUserData } from './utils/additional.js';
 
 let history = createBrowserHistory();
 
@@ -69,7 +70,7 @@ function render() {
   ReactDOM.render(
     <React.StrictMode>
       <ThemeProvider theme={state.theme}>
-          <Root page={state.page} destination={state.destination} history={history} language={state.language} changeTheme={changeTheme} changeLanguage={changeLanguage} />
+          <Root page={state.page} destination={state.destination} error={state.error} history={history} language={state.language} changeTheme={changeTheme} changeLanguage={changeLanguage} />
       </ThemeProvider>
     </React.StrictMode>,
     document.getElementById('root')
@@ -85,13 +86,21 @@ function changePage(href) {
       state.destination = res.destination;
     }
 
+    if (res.page === 'error') {
+      state.error = res.error
+    }
+
+
     render();
   })
 }
 
 setUpLangAndTheme();
 changePage(window.location.href);
+updateUserData(history);
 
+
+window.addEventListener('hashchange', changePage(window.location.href));
 history.listen(({action, location}) => {
   changePage(location.pathname);
-})
+});

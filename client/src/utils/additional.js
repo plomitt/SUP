@@ -140,30 +140,22 @@ export const ArrowDown = styled.div`
 `
 
 export function checkIfUserSignedIn() {
-  const session = localStorage.getItem('session');
-
-  if (session === null) {
-    return new Promise((resolve, reject) => { resolve(false) })
-  }
-
-  return sendRequest('/checksignin', 'POST', {data: session});
+  return sendRequest('/checksignin', 'GET');
 }
 
 export function updateUserData(history) {
-  const session = localStorage.getItem('session');
 
-  if (session !== null) {
-    sendRequest('/getuserdata', 'POST', {data: session})
-    .then(response => {
-      if (response.status === 'ok') {
-        localStorage.setItem('user', JSON.stringify(response.user));
-      }
+  sendRequest('/getuserdata', 'GET')
+  .then(response => {
+    if (response.status === 'ok') {
+      localStorage.setItem('user', JSON.stringify(response.user));
+    }
 
-      if (response.status === 'error') {
-        signOut(history);
-      }
-    })
-  }
+    if (response.status === 'error') {
+      signOut();
+      history.push('/');
+    }
+  })
 
 }
 
@@ -328,14 +320,11 @@ export function sendRequest(path, method, data) {
   })
 }
 
-export function signOut(history) {
+export function signOut() {
   try {
-    const session = localStorage.getItem('session');
-  
-    sendRequest('/signout', 'POST', {data: session});
-    localStorage.removeItem('session');
+    sendRequest('/signout', 'GET');
     localStorage.removeItem('user');
-    history.push('/');
+    localStorage.removeItem('authorized');
   } catch (e) {}
 }
 
@@ -560,9 +549,9 @@ export function PFP(props) {
 }
 
 function MenuBarDesktop(props) {
-  const session = localStorage.getItem('session');
+  const user = localStorage.getItem('user');
 
-  if (session === null) {
+  if (user === null) {
     return (
       <StyledMenuBar className={style.menu_bar_desktop}>
         <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
@@ -635,7 +624,7 @@ function MenuBarDesktopDropdown(props) {
         <li><StyledText onClick={() => props.history.push('/userpreferences')}>{languages[props.language].general.menu.link_user_pref_page}</StyledText></li>
         <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
         <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-        <li><StyledText onClick={() => { signOut(props.history) }}>{languages[props.language].general.menu.signout_btn}</StyledText></li>
+        <li><StyledText onClick={() => { signOut(); props.history.push('/'); }}>{languages[props.language].general.menu.signout_btn}</StyledText></li>
       </StyledDesktopMenuBarDropdown>
     </StyledDropdown>
   )
@@ -643,13 +632,13 @@ function MenuBarDesktopDropdown(props) {
 
 
 function MenuBarMobile(props) {
-  const session = localStorage.getItem('session');
+  const user = localStorage.getItem('user');
 
-  if (session === null) {
+  if (user === null) {
     return (
       <StyledMenuBar className={style.menu_bar_mobile}>
         <img src={props.hamburger} alt='hamburger' className={style.hamburger} onClick={() => { props.toggleMenu() }}></img>
-        <img src={icon} alt='sup_icon' className={style.icon} onClick={() => { window.location.href = '/' }}></img>
+        <img src={icon} alt='sup_icon' className={style.icon} onClick={() => { props.history.push('/') }}></img>
         <span className={style.spacer}></span>
       </StyledMenuBar>
     )
@@ -657,17 +646,17 @@ function MenuBarMobile(props) {
     return (
       <StyledMenuBar className={style.menu_bar_mobile}>
         <img src={props.hamburger} alt='hamburger' className={style.hamburger} onClick={() => { props.toggleMenu() }}></img>
-        <img src={icon} alt='sup_icon' className={style.icon} onClick={() => { window.location.href = '/' }}></img>
-        <PFP style={style} theme={props.theme} type={'mobile_menubar_pfp'} onClick={() => { window.location.href = '/userpreferences' }}/>
+        <img src={icon} alt='sup_icon' className={style.icon} onClick={() => { props.history.push('/') }}></img>
+        <PFP style={style} theme={props.theme} type={'mobile_menubar_pfp'} onClick={() => { props.history.push('/userpreferences') }}/>
       </StyledMenuBar>
     )
   }
 }
 
 function MenuBodyMobile(props) {
-  const session = localStorage.getItem('session');
+  const user = localStorage.getItem('user');
 
-  if (session === null) {
+  if (user === null) {
     return (
       <StyledDiv>
         <StyledMenuBarMobileUl>
@@ -689,7 +678,7 @@ function MenuBodyMobile(props) {
           <li><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
           <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-          <li><StyledP onClick={() => { signOut(props.history) }}>{languages[props.language].general.menu.signout_btn}</StyledP></li>
+          <li><StyledP onClick={() => { signOut(); props.history.push('/'); }}>{languages[props.language].general.menu.signout_btn}</StyledP></li>
         </StyledMenuBarMobileUl>
       </StyledDiv>
     )
@@ -719,7 +708,7 @@ export class Menu extends React.Component {
   }
 
   windowSizeChanged() {
-    if (window.innerWidth > 540) {
+    if (window.innerWidth > 670) {
       this.setState({
         showMenu: false,
         menuType: 'desktop'

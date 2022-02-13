@@ -1,24 +1,5 @@
 import placeholder from '../media/placeholder_orange.png';
 
-
-// const placeholderRows = {
-//   row0: {
-//     title: 'Neque porro quisquam est qui dolorem',
-//     text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sollicitudin massa in ante vehicula, eget fringilla nibh pretium. Nunc quis porttitor metus, in convallis lorem. Donec gravida tortor quis ante fringilla vestibulum.',
-//     image: placeholder
-//   },
-//   row1: {
-//     title: 'Praesent eget ullamcorper lacus',
-//     text: 'Sed gravida molestie vehicula. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris molestie, mi id interdum sagittis, dolor diam consequat sem',
-//     image: placeholder
-//   },
-//   row2: {
-//     title: 'Cras semper varius tortor mattis dapibus',
-//     text: 'Donec sed facilisis ligula. Sed vulputate nisl sed dignissim auctor. Quisque eu mattis tortor. Integer ac nisi lectus. Nunc faucibus, arcu id malesuada elementum, risus mauris scelerisque turpis.',
-//     image: placeholder
-//   }
-// }
-
 const languages = {
   en: {
     general: {
@@ -68,10 +49,16 @@ const languages = {
         too_long: 'Bio should be less than 250 characters',
       },
       name_error: {
-        too_short: ' should be at least 1 character long',
-        too_long: ' should be less than 15 characters',
-        contains_spec_chars: ' should not contain special characters',
-        contains_digits: ' should not contain numbers'
+        too_short: 'Name should be at least 1 character long',
+        too_long: 'Name should be less than 15 characters',
+        contains_spec_chars: 'Name should not contain special characters',
+        contains_digits: 'Name should not contain numbers'
+      },
+      surname_error: {
+        too_short: 'Surname should be at least 1 character long',
+        too_long: 'Surname should be less than 15 characters',
+        contains_spec_chars: 'Surname should not contain special characters',
+        contains_digits: 'Surname should not contain numbers'
       },
       email_error: {
         too_short: 'Email should be at least 4 characters long',
@@ -158,7 +145,8 @@ const languages = {
         title: 'Account is: ',
         verified: 'Verified',
         not_verified: 'Not verified',
-        btn: 'Send verifification email'
+        btn: 'Send verifification email',
+        email_sent: 'Verification email was sent to your inbox'
       },
       email: {
         title: 'Email: ',
@@ -183,7 +171,7 @@ const languages = {
         phone: 'Phone number',
         placeholder: 'Format: 1234567890',
         change_btn: 'Change phone number',
-        changed_success: 'Phone number was updated successfully'
+        changed_success: 'Phone number updated successfully'
       },
       pfp: {
         title: 'Profile picture',
@@ -192,25 +180,25 @@ const languages = {
         file_name: 'File: ',
         change_btn: 'Change profile picture',
         no_file_chosen: 'No file chosen',
-        changed_success: 'Profile picutre was updated successfully'
+        changed_success: 'Profile picutre updated successfully'
       },
       name: {
         title: 'Name: ',
         change_btn: 'Change name',
         name: 'Name',
         surname: 'Surname',
-        changed_success: 'Name was updated successfully'
+        changed_success: 'Name updated successfully'
       },
       bio: {
         title: 'Bio',
         change_btn: 'Change bio',
-        changed_success: 'Bio was updated successfully'
+        changed_success: 'Bio updated successfully'
       },
       grade: {
         title: 'Grade: ',
         grade: 'Grade',
         change_btn: 'Change grade',
-        changed_success: 'Grade was updated successfully'
+        changed_success: 'Grade updated successfully'
       },
       subjects: {
         change_btn: 'Change subjects',
@@ -248,8 +236,16 @@ const languages = {
       },
       themeSelect: {
         'light': 'Светлая',
-        'dark': 'Тёмная',
-        'other': 'Другая'
+        'dark': 'Тёмная'
+      },
+      page_titles: {
+        error: 'SUP | Ошибка',
+        auth: 'SUP | Авторизация',
+        signin: 'SUP | Войти',
+        signup: 'SUP | Регистрация',
+        userprefpage: 'SUP | Настройки',
+        landing: 'SUP',
+        work: 'SUP | Работа',
       },
       menu: {
         signin_btn: 'Войти',
@@ -257,39 +253,82 @@ const languages = {
         signout_btn: 'Выйти',
         link_user_pref_page: 'Настройки',
         work: 'Найти работу',
-        talent: 'Найти талант',
+        talent: 'Найти исполнителя',
         myjobs: 'Мои работы'
       },
-      create_account: 'Создать аккаунт'
+      create_account: 'Создать аккаунт',
+      server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже',
+      file_error: {
+        file_too_large: 'Выбранный файл слишком большой',
+        wrong_type: 'Выбранный файл не является изображением'
+      },
+      phone_error: {
+        incorrect: 'Введенные данные не соответствуют формату \'1234567890\''
+      },
+      grade_error: {
+        incorrect: 'Введенные данные не соответствуют формату \'11A\'',
+        wrong_grade: 'Цифра номера класса должна быть между 1 и 11',
+        contains_spec_chars: 'Номер класса не должен содержать специальных символов. Буква номера класса должна быть заглавной буквой латинского алфавита'
+      },
+      bio_error: {
+        too_short: 'Био должно быть длиннее 1 символа',
+        too_long: 'Био должно быть короче 250 символо',
+      },
+      name_error: {
+        too_short: 'Имя должно быть длиннее 1 символа',
+        too_long: 'Имя должно быть короче 15 символов',
+        contains_spec_chars: 'Имя не должно содержать специальных символов',
+        contains_digits: 'Имя не должно содержать цифр'
+      },
+      surname_error: {
+        too_short: 'Фамилия должна быть длиннее 1 символа',
+        too_long: 'Фамилия должна быть короче 15 символов',
+        contains_spec_chars: 'Фамилия не должна содержать специальных символов',
+        contains_digits: 'Фамилия не должна содержать цифр'
+      },
+      email_error: {
+        too_short: 'Адрес должен быть длиннее 4 символов',
+        too_long: 'Адрес должен быть короче 25 символов',
+        contains_spec_chars: 'Адрес не должен содержать специальные символы',
+        cant_be_same_email: 'Новый адрес должен отличаться от старого',
+        emails_should_be_same: 'Адреса не совпадают',
+        email_taken: 'Этот адрес занят, попробуйте другой'
+      },
+      password_error: {
+        too_short: 'Пароль должен быть длиннее 8 символов',
+        too_long: 'Пароль должен быть короче 25 символов',
+        no_spec_chars: 'Пароль должен содержать хотя бы один специальный символ',
+        no_digits: 'Пароль должен содержать хотя бы одну цифру',
+        no_uppercase: 'Пароль должен содержать хотя бы одну заглавную букву',
+        no_lowercase: 'Пароль должен содержать хотя бы одну строчную букву',
+        password_cant_be_same: 'Новый пароль должен отличаться от старого',
+      },
+      subjects: {
+        maths: 'Математика',
+        physics: 'Физика',
+        informatics: 'Информатика',
+        russian: 'Русский язык',
+        english: 'Английский язык'
+      }
     },
     signin_page: {
-      signin_text: 'Войдите',
-      filloutfield_text: 'Заполните это поле',
-      wrong_combination_text: 'Неверная комбинация, попробуйте снова',
-      server_error_text: 'Что-то пошло не так, попробуйте позже',
+      signin_text: 'Войти',
+      auth_text: 'Введите свой пароль',
+      filloutfield_text: 'Пожалуйста, заполните это поле',
+      wrong_combination_text: 'Неправильная комбинация, попробуйте еще раз',
+      server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже',
       create_account_text: 'Создать аккаунт',
       next_btn: 'Дальше'
     },
     signup_page: {
-      signup_text: 'Создайте аккаунт',
+      signup_text: 'Создать аккаунт',
       signin_text: 'Войти',
       next_btn: 'Дальше',
-      email_error: {
-        too_short: 'Email должен состоять не менее чем из 4 символов',
-        too_long: 'Email должен быть меньше 25 символов',
-        contains_spec_chars: 'Email не должен содержать специальных символов',
-        cant_be_same_email: 'Новый email должен отличаться от старого',
-        emails_should_be_same: 'Введёная информация не совпадает'
-      },
-      password_error: {
-        too_short: 'Пароль должен состоять не менее чем из 8 символов',
-        too_long: 'Пароль должен быть меньше 25 символов',
-        no_spec_chars: 'Пароль должен содержать хотя бы один специальный символ',
-        no_digits: 'Пароль должен содержать хотя бы одну цифру',
-        no_uppercase: 'Пароль должен содержать хотя бы одну заглавную букву',
-        no_lowercase: 'Пароль должен содержать хотя бы одну строчную букву'
-      },
-      server_error_text: 'Что-то пошло не так, попробуйте позже'
+      server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже'
+    },
+    authorization_page: {
+      wrong_password: 'Неправильный пароль',
+      server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже'
     },
     landing_page: {
       signin_btn: 'Войти',
@@ -325,42 +364,79 @@ const languages = {
     error_page: {
       '404': 'Страница не найдена',
       '500': 'Внутренняя ошибка сервера',
-      'go_back': 'Вернуться назад'
+      'go_back': 'Назад'
     },
     user_preferences_page: {
       verifification: {
         title: 'Аккаунт: ',
         verified: 'Подтверждён',
         not_verified: 'Не подтверждён',
-        btn: 'Отправить письмо для подтверждения'
+        btn: 'Отправить письмо с подтверждением',
+        email_sent: 'Письмо с подтверждением отправлено на ваш почтовый ящик'
       },
       email: {
         title: 'Email: ',
-        change_email: 'Поменять email',
-        enter_email: 'Введите новый email',
-        confirm_email: 'Повторите email',
-        confirm_password: 'Введите пароль',
-        email_sent_success: 'Письмо было отправлено',
+        change_btn: 'Сменить адрес электронной почты',
+        enter_email: 'Введите новый адрес',
+        confirm_email: 'Подтвердите адрес',
+        confirm_password: 'Введите текущий пароль',
+        changed_success: 'Письмо с подтверждением было отправлено на ваш новый почтовый ящик',
         placeholder: 'Email'
       },
       password: {
         title: 'Пароль',
-        confirm_new_password: 'Повторите пароль',
+        confirm_new_password: 'Подтвердите новый пароль',
         enter_current_password: 'Введите текущий пароль',
         enter_new_password: 'Введите новый пароль',
-        btn: 'Поменять пароль',
-        placeholder: 'Пароль'
+        change_btn: 'Сменить пароль',
+        placeholder: 'Пароль',
+        changed_success: 'Пароль успешно обновлён'
+      },
+      phone: {
+        title: 'Номер телефона: ',
+        phone: 'Номер телефона',
+        placeholder: 'Формат: 1234567890',
+        change_btn: 'Сменить номер телефона',
+        changed_success: 'Номер телефона успешно обновлён'
       },
       pfp: {
         title: 'Аватар',
-        upload: 'Загрузить новый аватар',
-        choose_file: 'Выберите файл',
+        upload: 'Загрузить аватар',
+        choose_file: 'Выбрать файл',
         file_name: 'Файл: ',
-        btn: 'Поменять аватар',
+        change_btn: 'Сменить аватар',
         no_file_chosen: 'Файл не выбран',
-        pfp_set: 'Аватар был успешно обновлён'
+        changed_success: 'Аватар успешно обновлён'
       },
-      server_error_text: 'Что-то пошло не так, попробуйте позже',
+      name: {
+        title: 'Имя: ',
+        change_btn: 'Сменить имя',
+        name: 'Имя',
+        surname: 'Фамилия',
+        changed_success: 'Имя успешно обновлено'
+      },
+      bio: {
+        title: 'Био',
+        change_btn: 'Сменить био',
+        changed_success: 'Био успешно обновлено'
+      },
+      grade: {
+        title: 'Класс: ',
+        grade: 'Класс',
+        change_btn: 'Сменить класс',
+        changed_success: 'Класс успешно обновлён'
+      },
+      subjects: {
+        change_btn: 'Сменить предметы',
+        changed_success: 'Предметы успешно обновлены',
+        subjectsNeedHelp: {
+          title: 'Предметы, с которыми вам нужна помощь'
+        },
+        subjectsCanHelp: {
+          title: 'Предметы, с которыми вы можете помочь'
+        }
+      },
+      server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже',
       wrong_password: 'Неправильный пароль',
       empty_password: 'Пожалуйста, заполните это поле',
       passwords_should_be_same: 'Пароли не совпадают',

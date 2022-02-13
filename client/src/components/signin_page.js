@@ -94,7 +94,6 @@ class SigninForm extends React.Component {
           const status = response.status;
           
           if (status === 'ok') {
-            localStorage.setItem('session', JSON.stringify(response.session));
             localStorage.setItem('user', JSON.stringify(response.user));
             this.props.history.push('/work')
           }

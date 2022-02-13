@@ -1,4 +1,4 @@
-import { checkIfUserSignedIn } from './additional.js';
+import { checkIfUserSignedIn, signOut } from './additional.js';
 
 export function router(href, history) {
   const array = href.split('/')
@@ -6,10 +6,16 @@ export function router(href, history) {
   const pages = ['', 'signin', 'signup', 'authorization', 'userpreferences', 'work']
   const protectedPages = ['userpreferences'];
 
+  
   return new Promise((resolve, reject) => {
     checkIfUserSignedIn()
     .then(isSignedIn => {
-      if (isSignedIn === 'error') {
+      if (isSignedIn === false) {
+        signOut();
+      }
+
+      if (isSignedIn.status === 'error') {
+        signOut();
         resolve({
           page: 'error',
           error: '500'
