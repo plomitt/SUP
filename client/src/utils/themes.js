@@ -27,6 +27,9 @@ const themes = {
     inputBckgColor: '#ffffff',
     accentColor: '#0a84ff',
     darkerAccentColor: '#0a6ac9',
+    safeColor: '#0a84ff',
+    dangerColor: '#ED230D',
+    darkerDangerColor: '#c21b0a',
     loadingCircle: black_circle,
     hamburger_normal: hamburger_normal_black,
     hamburger_x: hamburger_x_black
@@ -38,6 +41,9 @@ const themes = {
     inputBckgColor: '#000000',
     accentColor: '#0a84ff',
     darkerAccentColor: '#0a6ac9',
+    safeColor: '#0a84ff',
+    dangerColor: '#ED230D',
+    darkerDangerColor: '#c21b0a',
     loadingCircle: white_circle,
     hamburger_normal: hamburger_normal_white,
     hamburger_x: hamburger_x_white

@@ -2,7 +2,6 @@ import React from 'react';
 import style from '../styles/work_page.module.css';
 import { Footer, Menu } from '../utils/additional';
 import { withTheme } from 'styled-components';
-import languages from '../utils/languages';
 
 class Page extends React.Component {
   constructor(props) {
@@ -11,10 +10,6 @@ class Page extends React.Component {
     this.state = {
       showSignOutError: false
     }
-  }
-
-  componentDidMount() {
-    document.title = languages[this.props.language].general.page_titles.work;
   }
 
   hideSignOutError() {

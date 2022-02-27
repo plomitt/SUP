@@ -12,6 +12,36 @@ export function capitalizeFirstLetter(string) {
   return string[0].toUpperCase() + string.slice(1).toLowerCase();
 }
 
+export function getEmptyUserProfileFields() {
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  if (user === null) {
+    return [];
+  }
+
+  const fields = ['pfp', 'name', 'surname', 'grade', 'bio', 'subjectsCanHelp', 'subjectsNeedHelp', 'phone'];
+  const emptyFields = [];
+  
+  fields.forEach(element => {
+    if (user[element] === undefined) {
+      emptyFields.push(element);
+    }
+  })
+
+  return emptyFields;
+}
+
+export function redirectIfEmptyUserProfileFields(history) {
+  const fields = getEmptyUserProfileFields();
+
+  if (fields.length !== 0) {
+    const path = '/userpreferences?tab=profile&showpopup=true'
+    localStorage.setItem('authorized', 'true');
+
+    history.push(path);
+  }
+}
+
 export function getUserData(data) {
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -356,25 +386,66 @@ const PopUp = styled.div`
 `
 
 export class MessagePopUp extends React.Component {
+  hide() {
+    try {
+      document.getElementById(this.props.elementId).style = 'opacity: 1;';
+    } catch (e) {}
+    this.props.setMessage(false, false, false, false, false);
+  }
+
+  hideMessage(src) {
+    if (src === 'event') {
+      if (this.props.preventAutoHiding !== true) {
+        this.hide();
+      }
+    } else {
+      this.hide();
+    }
+  }
+
   componentDidMount() {
-    window.addEventListener('keyup', () => {this.props.setMessage(false)});
-    window.addEventListener('mousedown', () => {this.props.setMessage(false)});
+    window.addEventListener('keyup', () => {this.hideMessage('event')});
+    window.addEventListener('mousedown', () => {this.hideMessage('event')});
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keyup', () => {this.props.setMessage(false)});
-    window.removeEventListener('mousedown', () => {this.props.setMessage(false)});
+    window.removeEventListener('keyup', () => {this.hideMessage('event')});
+    window.removeEventListener('mousedown', () => {this.hideMessage('event')});
   }
 
   render() {
     if (this.props.showMessage !== false) {
+      try {
+        document.getElementById(this.props.elementId).style = 'opacity: 0.5;';
+      } catch (e) {}
+
+      const titleStyle = "fieldspopup_title_" + this.props.titleType;
+      let msg;
+
+      if (this.props.msgType === 'text') {
+        msg = (
+          <p className={style.fieldspopup_text}>{this.props.showMessage}</p>
+        );
+      } else {
+        msg = this.props.showMessage;
+      }
+
       return (
-        <PopUp className={style.message_box} id='messageBox'>
-          <p className={style.message_text}>{this.props.showMessage}</p>
-          <img src={this.props.theme.hamburger_x} alt='hamburger' className={style.message_x} onClick={() => { this.props.setMessage(false) }}></img>
-        </PopUp>
+        <PopUp className={style.fieldspopup_box} id='messageBox'>
+          <div className={style.fieldspopup_title_container}>
+            <p className={style[titleStyle]}>{this.props.title}</p>
+            <img src={this.props.theme.hamburger_x} alt='hamburger' className={style.fieldspopup_x} onClick={() => { this.hideMessage('btn'); }}></img>
+          </div>
+          <div className={style.fieldspopup_body_container}>
+            {msg}
+          </div>
+      </PopUp>
       )
     } else {
+      try {
+        document.getElementById(this.props.elementId).style = 'opacity: 1;';
+      } catch (e) {}
+
       return (
         <div></div>
       )
@@ -435,6 +506,15 @@ const StyledText = styled.p`
   &:hover {
     cursor: pointer;
     color: ${props => props.theme.darkerAccentColor};
+  }
+`
+
+const DangerText = styled.p`
+  color: ${props => props.theme.dangerColor};
+
+  &:hover {
+    cursor: pointer;
+    color: ${props => props.theme.darkerDangerColor};
   }
 `
 
@@ -523,6 +603,26 @@ const StyledMenuBarMobileUl = styled.ul`
   }
 `
 
+const SelectedP = styled.p`
+  color: ${props => props.theme.dangerColor};
+
+  &:hover {
+    cursor: pointer;
+    color: ${props => props.theme.darkerDangerColor};
+  }
+`
+
+function confirmSignOut(setMessage, history) {
+  const body = (
+    <div className={style.dialog_btn_container}>
+      <Button onClick={() => { setMessage(false, false, false, false, false); }}>Cancel</Button>
+      <SelectedP className={style.dialog_confirm} onClick={() => { signOut(); history.push('/'); }}>Sign out</SelectedP>
+    </div>
+  )
+
+  setMessage(body, 'other', 'Sign out?', 'normal', true);
+}
+
 export function LoadingCircle(props) {
   return (
     <img src={props.theme.loadingCircle} alt='Loading...' className={style.loading_circle}></img>
@@ -572,7 +672,7 @@ function MenuBarDesktop(props) {
         <DropdownContainer className={style.flex_box}>
           <div className={style.menubar_spacer}></div>
           <PFP theme={props.theme} type={'desktop_menubar_pfp'} onClick={() => { props.history.push('/userpreferences') }}/>
-          <MenuBarDesktopDropdown history={props.history} style={style} changeTheme={props.changeTheme} changeLanguage={props.changeLanguage} language={props.language} />
+          <MenuBarDesktopDropdown setMessage={props.setMessage} history={props.history} style={style} changeTheme={props.changeTheme} changeLanguage={props.changeLanguage} language={props.language} />
         </DropdownContainer>
       </StyledMenuBar>
     )
@@ -624,7 +724,7 @@ function MenuBarDesktopDropdown(props) {
         <li><StyledText onClick={() => props.history.push('/userpreferences')}>{languages[props.language].general.menu.link_user_pref_page}</StyledText></li>
         <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
         <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-        <li><StyledText onClick={() => { signOut(); props.history.push('/'); }}>{languages[props.language].general.menu.signout_btn}</StyledText></li>
+        <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>
       </StyledDesktopMenuBarDropdown>
     </StyledDropdown>
   )
@@ -678,7 +778,7 @@ function MenuBodyMobile(props) {
           <li><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
           <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-          <li><StyledP onClick={() => { signOut(); props.history.push('/'); }}>{languages[props.language].general.menu.signout_btn}</StyledP></li>
+          <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>
         </StyledMenuBarMobileUl>
       </StyledDiv>
     )
@@ -714,7 +814,6 @@ export class Menu extends React.Component {
         menuType: 'desktop'
       })
 
-      document.getElementById('pageBody').style = 'display: initial;'
     } else {
       this.setState({
         menuType: 'mobile'
@@ -730,7 +829,7 @@ export class Menu extends React.Component {
     if (this.state.showMenu === false) {
       document.getElementById('pageBody').style = 'display: none;'
     } else {
-      document.getElementById('pageBody').style = 'display: initial;'
+      document.getElementById('pageBody').style = ''
     }
 
   }
@@ -740,18 +839,18 @@ export class Menu extends React.Component {
 
     if (this.state.menuType === 'desktop') {
       toShow = (
-        <MenuBarDesktop history={this.props.history} style={this.props.style} theme={this.props.theme} language={this.props.language} changeLanguage={this.props.changeLanguage} changeTheme={this.props.changeTheme}></MenuBarDesktop>
+        <MenuBarDesktop setMessage={this.props.setMessage} history={this.props.history} style={this.props.style} theme={this.props.theme} language={this.props.language} changeLanguage={this.props.changeLanguage} changeTheme={this.props.changeTheme}></MenuBarDesktop>
       )
     } else {
       if (this.state.showMenu === false) {
         toShow = (
-          <MenuBarMobile history={this.props.history} style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_normal} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
+          <MenuBarMobile setMessage={this.props.setMessage} history={this.props.history} style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_normal} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
         )
       } else {
         toShow = (
           <div>
-            <MenuBarMobile history={this.props.history} style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_x} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
-            <MenuBodyMobile history={this.props.history} style={this.props.style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} toggleMenu={this.toggleMenu}></MenuBodyMobile>
+            <MenuBarMobile setMessage={this.props.setMessage} history={this.props.history} style={this.props.style} theme={this.props.theme} hamburger={this.props.theme.hamburger_x} language={this.props.language} toggleMenu={this.toggleMenu}></MenuBarMobile>
+            <MenuBodyMobile setMessage={this.props.setMessage} history={this.props.history} style={this.props.style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} toggleMenu={this.toggleMenu}></MenuBodyMobile>
           </div>
         )
       }

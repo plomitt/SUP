@@ -3,9 +3,8 @@ import styled from 'styled-components';
 import style from '../styles/signin_page.module.css';
 import logo from '../media/sup_logo.png';
 import { withTheme } from 'styled-components';
-import { Button, StyledInput, SelectContainer, StyledSelect, ArrowDown, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv } from '../utils/additional';
+import { Button, StyledInput, SelectContainer, StyledSelect, ArrowDown, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, getEmptyUserProfileFields } from '../utils/additional';
 import languages from '../utils/languages';
-require('dotenv').config();
 
 const StyledP = styled.p`
   color: ${props => props.theme.textColor};
@@ -33,10 +32,6 @@ class SigninForm extends React.Component {
       showLoadingCircle: false,
       showResponse: false
     }
-  }
-
-  componentDidMount() {
-    document.title = languages[this.props.language].general.page_titles.signin;
   }
 
   handleClick() {
@@ -95,7 +90,18 @@ class SigninForm extends React.Component {
           
           if (status === 'ok') {
             localStorage.setItem('user', JSON.stringify(response.user));
-            this.props.history.push('/work')
+
+            const fields = getEmptyUserProfileFields();
+
+            if (fields.length !== 0) {
+              const path = '/userpreferences?tab=profile&showpopup=true'
+              localStorage.setItem('authorized', 'true');
+
+              this.props.history.push(path);
+            } else {
+              this.props.history.push('/work')
+            }
+
           }
 
           if (status === 'wrong') {

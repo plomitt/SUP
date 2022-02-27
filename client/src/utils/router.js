@@ -1,8 +1,10 @@
 import { checkIfUserSignedIn, signOut } from './additional.js';
 
 export function router(href, history) {
-  const array = href.split('/')
-  const destination = array[array.length - 1].split('?')[0];
+  const d1 = href.replace('//', '');
+  const d2 = d1.match(/(\/(\w+))/g);
+
+  const destination = d2 === null ? '' : d2[0].replaceAll('/', '');
   const pages = ['', 'signin', 'signup', 'authorization', 'userpreferences', 'work']
   const protectedPages = ['userpreferences'];
 

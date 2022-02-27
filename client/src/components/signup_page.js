@@ -5,7 +5,6 @@ import logo from '../media/sup_logo.png';
 import { withTheme } from 'styled-components';
 import { Button, SelectContainer, StyledSelect, ArrowDown, StyledInput, checkEmail, checkPassword, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, MessagePopUp } from '../utils/additional';
 import languages from '../utils/languages';
-require('dotenv').config();
 
 const StyledP = styled.p`
   color: ${props => props.theme.textColor};
@@ -35,10 +34,6 @@ class SignupForm extends React.Component {
       showLoadingCircle: false,
       showResponse: false
     }
-  }
-
-  componentDidMount() {
-    document.title = languages[this.props.language].general.page_titles.signup;
   }
 
   handleClick() {
@@ -107,7 +102,8 @@ class SignupForm extends React.Component {
                 })
               } else {
                 localStorage.setItem('user', JSON.stringify(response.user));
-                this.props.history.push('/userpreferences');
+                localStorage.setItem('authorized', 'true');
+                this.props.history.push('/userpreferences?tab=profile');
               }
             })
           }
@@ -176,36 +172,38 @@ class SignupForm extends React.Component {
 
     return (
       <div>
-        <div className={style.container}>
-          <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { this.props.history.push('/') }}></img>
-          <p className={style.signup_text}>{languages[this.props.language].signup_page.signup_text}</p>
-          <StyledInputDiv>
-            <StyledInput className={style.email} id='email' type='text' placeholder='Email' required autoFocus onKeyUp={(e) => { if (e.key === 'Enter') { this.handleClick() } }}></StyledInput>
-            <span className={style.input_span}>
-              <SelectContainer>
-                <StyledSelect id='emailSelect' defaultValue='student'>
-                  <option value='student'>@edu.sk.ru</option>
-                  <option value='teacher'>@sk.ru</option>
-                </StyledSelect>
-                <ArrowDown className={style.arrowDown}  onClick={() => { document.getElementById('emailSelect').click() }} />
-              </SelectContainer>
-            </span>
-          </StyledInputDiv>
-          {emailIncorrect}
-          {passwordField}
-          {passwordIncorrect}
-          {loadingCircle}
-          <div className={style.bottom_div}>
-            <StyledP onClick={() => { this.props.history.push('/signin') }}>{languages[this.props.language].signup_page.signin_text}</StyledP>
-            <Button id='next_btn' className={style.next_btn} onClick={() => {this.handleClick()}}>{languages[this.props.language].signup_page.next_btn}</Button>
+        <div id='page'>
+          <div className={style.container}>
+            <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { this.props.history.push('/') }}></img>
+            <p className={style.signup_text}>{languages[this.props.language].signup_page.signup_text}</p>
+            <StyledInputDiv>
+              <StyledInput className={style.email} id='email' type='text' placeholder='Email' required autoFocus onKeyUp={(e) => { if (e.key === 'Enter') { this.handleClick() } }}></StyledInput>
+              <span className={style.input_span}>
+                <SelectContainer>
+                  <StyledSelect id='emailSelect' defaultValue='student'>
+                    <option value='student'>@edu.sk.ru</option>
+                    <option value='teacher'>@sk.ru</option>
+                  </StyledSelect>
+                  <ArrowDown className={style.arrowDown}  onClick={() => { document.getElementById('emailSelect').click() }} />
+                </SelectContainer>
+              </span>
+            </StyledInputDiv>
+            {emailIncorrect}
+            {passwordField}
+            {passwordIncorrect}
+            {loadingCircle}
+            <div className={style.bottom_div}>
+              <StyledP onClick={() => { this.props.history.push('/signin') }}>{languages[this.props.language].signup_page.signin_text}</StyledP>
+              <Button id='next_btn' className={style.next_btn} onClick={() => {this.handleClick()}}>{languages[this.props.language].signup_page.next_btn}</Button>
+            </div>
+            <div className={style.selectors_div}>
+              <ThemeSelector changeTheme={this.props.changeTheme} language={this.props.language} style={style}></ThemeSelector>
+              <LanguageSelector language={this.props.language} style={style} changeLanguage={this.props.changeLanguage}></LanguageSelector>
+            </div>
           </div>
-          <div className={style.selectors_div}>
-            <ThemeSelector changeTheme={this.props.changeTheme} language={this.props.language} style={style}></ThemeSelector>
-            <LanguageSelector language={this.props.language} style={style} changeLanguage={this.props.changeLanguage}></LanguageSelector>
-          </div>
+          <Footer />
         </div>
-        <MessagePopUp showMessage={this.state.showResponse} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
-        <Footer />
+        <MessagePopUp elementId={'page'} showMessage={this.state.showResponse} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     );
   }

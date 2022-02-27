@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/user_pref_page.module.css';
-import { MessagePopUp, SelectContainer, StyledSelect, ArrowDown, StyledInput, Footer, Menu, getUrlParam, getUserData, setUserData, checkEmail, Button, sendRequest, checkPassword, LoadingCircle, PFP, checkName, capitalizeFirstLetter, checkBio, checkGrade, checkPhone, stringifyPhone, checkFile } from '../utils/additional';
+import { MessagePopUp, SelectContainer, StyledSelect, ArrowDown, StyledInput, Footer, Menu, getUrlParam, getUserData, setUserData, checkEmail, Button, sendRequest, checkPassword, LoadingCircle, PFP, checkName, capitalizeFirstLetter, checkBio, checkGrade, checkPhone, stringifyPhone, checkFile, getEmptyUserProfileFields } from '../utils/additional';
 import languages from '../utils/languages';
 
 const StyledP = styled.p`
@@ -24,6 +24,7 @@ const SelectedP = styled.p`
 
 const SelectedSubject = styled.p`
   color: ${props => props.theme.accentColor};
+  margin: 0px;
 
   &:hover {
     cursor: pointer;
@@ -33,6 +34,7 @@ const SelectedSubject = styled.p`
 
 const UnselectedSubject = styled.p`
   color: ${props => props.theme.textColor};
+  margin: 0px;
 
   &:hover {
     cursor: pointer;
@@ -86,27 +88,13 @@ const StyledSidebar = styled.div`
   border-radius: 10px;
 `
 
-const StyledRestOfPage = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 80px;
-  margin-left: 290px;
-
-  border-radius: 25px;
-
-  background-color: ${props => props.theme.primaryColor};
-
-  padding: 20px;
-`
-
-
 
 function Verifification(props) {
   const user = JSON.parse(localStorage.getItem('user'));
 
   if (user.verified === true) {
     return (
-      <p className={style.verifification}>
+      <p className={style['title_text' + props.menuType]}>
         {languages[props.language].user_preferences_page.verifification.title}
         <span className={style.verified}>
           {languages[props.language].user_preferences_page.verifification['verified']}
@@ -116,13 +104,13 @@ function Verifification(props) {
   } else {
     return (
       <div>
-        <p className={style.verifification}>
+        <p className={style['title_text' + props.menuType]}>
           {languages[props.language].user_preferences_page.verifification.title}
           <span className={style.not_verified}>
             {languages[props.language].user_preferences_page.verifification['not_verified']}
           </span>
         </p>
-        <SelectedP onClick={() => {props.setMessage(languages[props.language].user_preferences_page.verifification.email_sent)}} className={style.change_email_btn}>{languages[props.language].user_preferences_page.verifification.btn}</SelectedP>
+        <SelectedP onClick={() => {props.setMessage(languages[props.language].user_preferences_page.verifification.email_sent, 'text', languages[props.language].user_preferences_page.success, 'success')}} className={style['menu_toggle' + props.menuType]}>{languages[props.language].user_preferences_page.verifification.btn}</SelectedP>
       </div>
     )
   }
@@ -236,7 +224,7 @@ class Email extends React.Component {
               setUserData('email', email1);
               setUserData('verified', false);
               this.setEmail();
-              this.props.setMessage(languages[this.props.language].user_preferences_page.email.changed_success);
+              this.props.setMessage(languages[this.props.language].user_preferences_page.email.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
               this.setState({
                 showEmail2Field: false,
                 showMenu: false
@@ -248,7 +236,7 @@ class Email extends React.Component {
                 showEmail2Field: false,
                 showMenu: false
               })
-              this.props.setMessage(languages[this.props.language].general.server_error_text);
+              this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
             }
           })
           
@@ -310,8 +298,8 @@ class Email extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div className={style.email_container}>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.email.title}{this.state.userEmail}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.email.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.email.title}{this.state.userEmail}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.email.change_btn}</SelectedP>
         </div>
       )
     } else {
@@ -417,7 +405,7 @@ class Password extends React.Component {
             })
 
             if (response.status === 'success') {
-              this.props.setMessage(languages[this.props.language].user_preferences_page.password.changed_success);
+              this.props.setMessage(languages[this.props.language].user_preferences_page.password.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
               this.setState({
                 showPassword2Field: false,
                 showPassword3Field: false,
@@ -431,7 +419,7 @@ class Password extends React.Component {
                 showPassword2Field: false,
                 showMenu: false
               })
-              this.props.setMessage(languages[this.props.language].general.server_error_text);
+              this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
             }
           })
           
@@ -484,8 +472,8 @@ class Password extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div className={style.email_container}>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.password.title}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.password.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.password.title}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.password.change_btn}</SelectedP>
         </div>
       )
     } else {
@@ -514,17 +502,20 @@ class Phone extends React.Component {
     this.handleClick = this.handleClick.bind(this);
 
     const phoneNumber = getUserData('phone');
-    let phoneNumberToDisplay = 'Not specified';
+    let isSpecified = 'not_specified';
+    let phoneNumberToDisplay = '';
 
     if (phoneNumber !== undefined) {
       phoneNumberToDisplay = stringifyPhone(phoneNumber);
+      isSpecified = '';
     }
 
     this.state = {
       showMenu: false,
       phoneNumberCheck: true,
       showLoadingCircle: false,
-      phoneNumber: phoneNumberToDisplay
+      phoneNumber: phoneNumberToDisplay,
+      isSpecified: isSpecified
     }
   }
 
@@ -554,17 +545,18 @@ class Phone extends React.Component {
             showMenu: false,
             phoneNumberCheck: true,
             showLoadingCircle: false,
-            phoneNumber: stringifyPhone(phoneNumber)
+            phoneNumber: stringifyPhone(phoneNumber),
+            isSpecified: ''
           });
 
           setUserData('phone', phoneNumber);
 
-          this.props.setMessage(languages[this.props.language].user_preferences_page.phone.changed_success);
+          this.props.setMessage(languages[this.props.language].user_preferences_page.phone.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
         }
         
         if (response.status === 'error') {
           this.hideMenu();
-          this.props.setMessage(languages[this.props.language].general.server_error_text);
+          this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
         }
       })
       
@@ -585,7 +577,7 @@ class Phone extends React.Component {
       )
     }
 
-    const gradeField = (
+    const phoneField = (
       <div>
           <StyledLabel htmlFor='phone'>{languages[this.props.language].user_preferences_page.phone.phone}</StyledLabel>
           <StyledInputDiv>
@@ -605,14 +597,14 @@ class Phone extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.phone.title}{this.state.phoneNumber}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.phone.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.phone.title}{this.state.phoneNumber}{languages[this.props.language].user_preferences_page[this.state.isSpecified]}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.phone.change_btn}</SelectedP>
         </div>
       )
     } else {
       return (
         <div>
-          {gradeField}
+          {phoneField}
           {loadingCircle}
           <div className={style.emailBtnsContainer}>
             <Button id='phoneCancelBtn' className={style.next_btn} onClick={() => {this.hideMenu()}}>{languages[this.props.language].user_preferences_page.cancel_btn}</Button>
@@ -626,24 +618,20 @@ class Phone extends React.Component {
 
 function Settings(props) {
   return (
-    <StyledRestOfPage>
-      <div className={style.pref_container}>
-        <ul className={style.settings_list}>
-          <li>
-            <Verifification language={props.language} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <Email language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <Password language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <Phone language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-        </ul>
-      </div>
-    </StyledRestOfPage>
+    <ul className={style['settings_list' + props.menuType]}>
+      <li>
+        <Verifification menuType={props.menuType} language={props.language} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <Email menuType={props.menuType} language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <Password menuType={props.menuType} language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <Phone menuType={props.menuType} language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+    </ul>
   )
 }
 
@@ -704,8 +692,6 @@ class ProfilePictureMenu extends React.Component {
   
       reader.onload = () => {
         const image = (reader.result).split(',')[1];
-
-        console.log(image);
   
         sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['pfp', image])})
         .then(response => {
@@ -720,7 +706,7 @@ class ProfilePictureMenu extends React.Component {
             })
   
             setUserData('pfp', image);
-            this.props.setMessage(languages[this.props.language].user_preferences_page.pfp.changed_success);
+            this.props.setMessage(languages[this.props.language].user_preferences_page.pfp.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
           } 
           
           if (response.status === 'error') {
@@ -732,7 +718,7 @@ class ProfilePictureMenu extends React.Component {
               fileError: true
             })
   
-            this.props.setMessage(languages[this.props.language].general.server_error_text);
+            this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
           }
         })
       };
@@ -757,7 +743,7 @@ class ProfilePictureMenu extends React.Component {
     let sendButton;
     if (this.state.fileChosen === true) {
       sendButton = (
-        <SelectedP onClick={() => this.sendPfp()} className={style.send_pfp_btn}>{languages[this.props.language].user_preferences_page.pfp.upload}</SelectedP>
+        <SelectedP onClick={() => this.sendPfp()} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.pfp.upload}</SelectedP>
       )
     }
 
@@ -772,11 +758,11 @@ class ProfilePictureMenu extends React.Component {
 
       controls = (
         <div className={style.pfpControls}>
-          <p className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.pfp.file_name}{file}</p>
-          <SelectedP onClick={() => document.getElementById('userPfp').click()} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.pfp.choose_file}</SelectedP>
+          <p className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.pfp.file_name}{file}</p>
+          <SelectedP onClick={() => document.getElementById('userPfp').click()} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.pfp.choose_file}</SelectedP>
           {fileError}
           <div className={style.pfpButtonsContainer}>
-            <SelectedP onClick={() => this.setState({showControls: false, fileChosen: false, fileName: 'no_file_chosen', showLoadingCircle: false})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.cancel_btn}</SelectedP>
+            <SelectedP onClick={() => this.setState({showControls: false, fileChosen: false, fileName: 'no_file_chosen', showLoadingCircle: false})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.cancel_btn}</SelectedP>
             {sendButton}
           </div>
           <input id='userPfp' className={style.pfp_input} onChange={() => this.setPfp()} type='file'></input>
@@ -794,10 +780,10 @@ class ProfilePictureMenu extends React.Component {
     return (
       <div>
         <div className={style.pfpContainer}>
-          <PFP theme={this.props.theme} type={'userprefpage_menubar_pfp'} onClick={() => this.toggleMenu()}/>
+          <PFP theme={this.props.theme} type={'userprefpage_menubar_pfp' + this.props.menuType} onClick={() => this.toggleMenu()}/>
           <div className={style.pfpTextContainer}>
-            <p className={style.pfp_text}>{languages[this.props.language].user_preferences_page.pfp.title}</p>
-            <SelectedP onClick={() => this.toggleMenu()} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.pfp.change_btn}</SelectedP>
+            <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.pfp.title}</p>
+            <SelectedP onClick={() => this.toggleMenu()} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.pfp.change_btn}</SelectedP>
           </div>
         </div>
         {controls}
@@ -814,6 +800,7 @@ class NameMenu extends React.Component {
 
     const name = getUserData('name');
     const surname = getUserData('surname');
+    let isSpecified = 'not_specified';
     let fullName = '';
 
     if (name !== undefined) {
@@ -824,8 +811,8 @@ class NameMenu extends React.Component {
       fullName = fullName + ' ' + surname;
     }
 
-    if (fullName === '') {
-      fullName = 'Not specified'
+    if (fullName !== '') {
+      isSpecified = ''
     }
 
     this.state = {
@@ -834,7 +821,8 @@ class NameMenu extends React.Component {
       surnameCheck: true,
       showSurnameField: false,
       showLoadingCircle: false,
-      fullName: fullName
+      fullName: fullName,
+      isSpecified: isSpecified
     }
   }
 
@@ -858,18 +846,19 @@ class NameMenu extends React.Component {
         showLoadingCircle: false
       })
       
-      const name = capitalizeFirstLetter(document.getElementById('name').value);
       const surnameField = document.getElementById('surname');
       
       if (surnameField !== null) {
-        const surname = capitalizeFirstLetter(surnameField.value);
-        const surnameCheck = checkName(surname);
-
+        const surnameCheck = checkName(surnameField.value);
+        
         if (surnameCheck === true) {
           this.setState({
             surnameCheck: true,
             showLoadingCircle: true
           })
+          
+          const name = capitalizeFirstLetter(document.getElementById('name').value);
+          const surname = capitalizeFirstLetter(surnameField.value);
           
           sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['name', name, surname])})
           .then(response => {
@@ -883,18 +872,19 @@ class NameMenu extends React.Component {
                 surnameCheck: true,
                 showSurnameField: false,
                 showLoadingCircle: false,
-                fullName: newName
+                fullName: newName,
+                isSpecified: ''
               });
 
               setUserData('name', name);
               setUserData('surname', surname);
 
-              this.props.setMessage(languages[this.props.language].user_preferences_page.name.changed_success);
+              this.props.setMessage(languages[this.props.language].user_preferences_page.name.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
             }
             
             if (response.status === 'error') {
               this.hideMenu();
-              this.props.setMessage(languages[this.props.language].general.server_error_text);
+              this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
             }
           })
         } else {
@@ -962,8 +952,8 @@ class NameMenu extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.name.title}{this.state.fullName}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.name.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.name.title}{this.state.fullName}{languages[this.props.language].user_preferences_page[this.state.isSpecified]}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.name.change_btn}</SelectedP>
         </div>
       )
     } else {
@@ -988,17 +978,20 @@ class GradeMenu extends React.Component {
     this.handleClick = this.handleClick.bind(this);
 
     const grade = getUserData('grade');
-    let gradeToDisplay = 'Not specified';
+    let isSpecified = 'not_specified';
+    let gradeToDisplay = '';
 
     if (grade !== undefined) {
       gradeToDisplay = grade;
+      isSpecified = '';
     }
 
     this.state = {
       showMenu: false,
       gradeCheck: true,
       showLoadingCircle: false,
-      grade: gradeToDisplay
+      grade: gradeToDisplay,
+      isSpecified: isSpecified
     }
   }
 
@@ -1029,17 +1022,18 @@ class GradeMenu extends React.Component {
             showMenu: false,
             gradeCheck: true,
             showLoadingCircle: false,
-            grade: grade
+            grade: grade,
+            isSpecified: ''
           });
 
           setUserData('grade', grade);
 
-          this.props.setMessage(languages[this.props.language].user_preferences_page.grade.changed_success);
+          this.props.setMessage(languages[this.props.language].user_preferences_page.grade.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
         }
         
         if (response.status === 'error') {
           this.hideMenu();
-          this.props.setMessage(languages[this.props.language].general.server_error_text);
+          this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
         }
       })
     } else {
@@ -1078,8 +1072,8 @@ class GradeMenu extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.grade.title}{this.state.grade}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.grade.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.title}{this.state.grade}{languages[this.props.language].user_preferences_page[this.state.isSpecified]}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.change_btn}</SelectedP>
         </div>
       )
     } else {
@@ -1162,12 +1156,12 @@ class BioMenu extends React.Component {
 
           setUserData('bio', bio);
 
-          this.props.setMessage(languages[this.props.language].user_preferences_page.bio.changed_success);
+          this.props.setMessage(languages[this.props.language].user_preferences_page.bio.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
         }
         
         if (response.status === 'error'){
           this.hideMenu();
-          this.props.setMessage(languages[this.props.language].general.server_error_text);
+          this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
         }
       })
       
@@ -1214,8 +1208,8 @@ class BioMenu extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.bio.title}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.bio.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.bio.title}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.bio.change_btn}</SelectedP>
         </div>
       )
     } else {
@@ -1282,12 +1276,12 @@ class Subjects extends React.Component {
 
         setUserData(this.props.subjectsType, subjects);
 
-        this.props.setMessage(languages[this.props.language].user_preferences_page.subjects.changed_success);
+        this.props.setMessage(languages[this.props.language].user_preferences_page.subjects.changed_success, 'text', languages[this.props.language].user_preferences_page.success, 'success');
       }
       
       if (response.status === 'error') {
         this.hideMenu();
-        this.props.setMessage(languages[this.props.language].general.server_error_text);
+        this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
       }
     })
   }
@@ -1339,15 +1333,15 @@ class Subjects extends React.Component {
     if (this.state.showMenu === false) {
       return (
         <div>
-          <p className={style.email_text}>{languages[this.props.language].user_preferences_page.subjects[this.props.subjectsType].title}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style.change_email_btn}>{languages[this.props.language].user_preferences_page.subjects.change_btn}</SelectedP>
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.subjects[this.props.subjectsType].title}</p>
+          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.subjects.change_btn}</SelectedP>
         </div>
       )
     } else {
       return (
         <div>
-          <StyledLabel>{languages[this.props.language].user_preferences_page.subjects[this.props.subjectsType].title}</StyledLabel>
-          <ul className={style.subject_list}>
+          <label  className={style['subjects_label' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.subjects[this.props.subjectsType].title}</label>
+          <ul className={style['subjects_list' + this.props.menuType]}>
             {subjectList}
           </ul>
           {loadingCircle}
@@ -1363,51 +1357,43 @@ class Subjects extends React.Component {
 
 function Profile(props) {
   return (
-    <StyledRestOfPage>
-      <div className={style.pref_container}>
-        <ul className={style.settings_list}>
-          <li>
-            <ProfilePictureMenu language={props.language} setMessage={props.setMessage} theme={props.theme}/>
-          </li>
-          <li>
-            <NameMenu language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <GradeMenu language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <BioMenu language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <Subjects subjectsType='subjectsNeedHelp' language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-          <li>
-            <Subjects subjectsType='subjectsCanHelp' language={props.language} theme={props.theme} setMessage={props.setMessage}/>
-          </li>
-        </ul>
-      </div>
-    </StyledRestOfPage>
+    <ul className={style['settings_list' + props.menuType]}>
+      <li>
+        <ProfilePictureMenu menuType={props.menuType} language={props.language} setMessage={props.setMessage} theme={props.theme}/>
+      </li>
+      <li>
+        <NameMenu menuType={props.menuType} language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <GradeMenu menuType={props.menuType} language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <BioMenu menuType={props.menuType} language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <Subjects menuType={props.menuType} subjectsType='subjectsNeedHelp' language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+      <li>
+        <Subjects menuType={props.menuType} subjectsType='subjectsCanHelp' language={props.language} theme={props.theme} setMessage={props.setMessage}/>
+      </li>
+    </ul>
   )
 }
 
 function Sidebar(props) {
   if (props.tab === 'settings') {
     return (
-      <div className={style.sidebar}>
-        <StyledSidebar>
-          <SelectedP onClick={() => props.setTab('settings')} className={style.settings_btn}>{languages[props.language].user_preferences_page.sidebar.settings}</SelectedP>
-          <StyledP onClick={() => props.setTab('profile')} className={style.profile_btn}>{languages[props.language].user_preferences_page.sidebar.profile}</StyledP>
-        </StyledSidebar>
-      </div>
+      <StyledSidebar className={style['sidebar' + props.menuType]}>
+        <StyledP onClick={() => props.setTab('profile')} className={style['profile_btn' + props.menuType]}>{languages[props.language].user_preferences_page.sidebar.profile}</StyledP>
+        <SelectedP onClick={() => props.setTab('settings')} className={style['settings_btn' + props.menuType]}>{languages[props.language].user_preferences_page.sidebar.settings}</SelectedP>
+      </StyledSidebar>
     )
   } else {
     return (
-      <div className={style.sidebar}>
-        <StyledSidebar>
-          <StyledP onClick={() => props.setTab('settings')} className={style.settings_btn}>{languages[props.language].user_preferences_page.sidebar.settings}</StyledP>
-          <SelectedP onClick={() => props.setTab('profile')} className={style.profile_btn}>{languages[props.language].user_preferences_page.sidebar.profile}</SelectedP>
-        </StyledSidebar>
-      </div>
+      <StyledSidebar className={style['sidebar' + props.menuType]}>
+        <SelectedP onClick={() => props.setTab('profile')} className={style['profile_btn' + props.menuType]}>{languages[props.language].user_preferences_page.sidebar.profile}</SelectedP>
+        <StyledP onClick={() => props.setTab('settings')} className={style['settings_btn' + props.menuType]}>{languages[props.language].user_preferences_page.sidebar.settings}</StyledP>
+      </StyledSidebar>
     )
   }
 }
@@ -1417,28 +1403,91 @@ class UserPreferencesPage extends React.Component {
     super(props);
     this.setTab = this.setTab.bind(this);
     this.setMessage = this.setMessage.bind(this);
+    this.windowSizeChanged = this.windowSizeChanged.bind(this);
 
     this.state = {
-      tab: 'settings',
-      showMessage: false
+      tab: 'profile',
+      showMessage: false,
+      messageTitle: 'temp title',
+      messageType: 'text',
+      titleType: 'normal',
+      menuType: 'desktop',
+      preventAutoHiding: false
     }
   }
 
   componentDidMount() {
-    document.title = languages[this.props.language].general.page_titles.userprefpage;
+    window.addEventListener('resize', this.windowSizeChanged);
+    this.windowSizeChanged();
 
-    const param = getUrlParam('tab');
+    const tab = getUrlParam('tab');
+    const showPopup = getUrlParam('showpopup');
 
-    if (param !== null) {
+    if (tab !== null) {
       this.setState({
-        tab: param
+        tab: tab
       })
+    }
+
+    if (showPopup === 'true') {
+      this.showFieldsPopup();
     }
     
     let unlisten = this.props.history.listen(({action, location}) => {
       localStorage.setItem('authorized', 'false');
       unlisten();
     })
+
+    let unblock = this.props.history.block(tx => {
+      const fields = getEmptyUserProfileFields();
+      if (fields.length === 0) {
+        unblock();
+        tx.retry();
+      } else {
+        this.showFieldsPopup();
+      }
+    })
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.windowSizeChanged);
+  }
+
+  windowSizeChanged() {
+    if (window.innerWidth >= 670) {
+      this.setState({
+        menuType: 'desktop'
+      })
+    } else if (window.innerWidth > 420 && window.innerWidth < 670) {
+      this.setState({
+        menuType: 'tablet'
+      })
+    } else {
+      this.setState({
+        menuType: 'mobile'
+      })
+    }
+  }
+
+  showFieldsPopup() {
+    const fields = getEmptyUserProfileFields();
+
+    const lis = fields.map(element => {
+      return (
+        <li>{languages[this.props.language].user_preferences_page.emptyFields[element]}</li>
+      )
+    })
+
+    const body = (
+      <div>
+        <p className={style.fieldspopup_text}>{languages[this.props.language].user_preferences_page.emptyFields.body}</p>
+        <ul className={style.fieldspopup_list}>
+          {lis}
+        </ul>
+      </div>
+    )
+
+    this.setMessage(body, 'other', languages[this.props.language].user_preferences_page.emptyFields.title, 'failure');
   }
 
   setTab(tab) {
@@ -1447,33 +1496,41 @@ class UserPreferencesPage extends React.Component {
     })
   }
 
-  setMessage(state) {
+  setMessage(body, msgType, title, titleType) {
     this.setState({
-      showMessage: state
+      showMessage: body,
+      messageType: msgType,
+      messageTitle: title,
+      titleType: titleType,
+      preventAutoHiding: arguments[arguments.length - 1]
     })
   }
   
   render() {
-    let toShow;
+    let tab;
 
     if (this.state.tab === 'settings') {
-      toShow = (<Settings language={this.props.language} theme={this.props.theme} setMessage={this.setMessage}/>)
+      tab = (<Settings menuType={this.state.menuType} language={this.props.language} theme={this.props.theme} setMessage={this.setMessage}/>)
     }
 
     if (this.state.tab === 'profile') {
-      toShow = (<Profile language={this.props.language} theme={this.props.theme} setMessage={this.setMessage}/>)
+      tab = (<Profile menuType={this.state.menuType} language={this.props.language} theme={this.props.theme} setMessage={this.setMessage}/>)
     }
 
 
     return (
       <div>
-        <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
-        <div id='pageBody' className={style.pageBody}>
-          <MessagePopUp showMessage={this.state.showMessage} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
-          <Sidebar language={this.props.language} tab={this.state.tab} setTab={this.setTab} />
-          {toShow}
+        <div id='page'>
+          <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
+          <div id='pageBody' className={style['pageBody' + this.state.menuType]}>
+            <Sidebar language={this.props.language} tab={this.state.tab} setTab={this.setTab} menuType={this.state.menuType} />
+            <div className={style['pref_container' + this.state.menuType]}>
+              {tab}
+            </div>
+          </div>
+          <Footer />
         </div>
-        <Footer />
+        <MessagePopUp elementId={'page'} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     )
   }

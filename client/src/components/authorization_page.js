@@ -4,7 +4,6 @@ import logo from '../media/sup_logo.png';
 import styled, { withTheme } from 'styled-components';
 import { Button, StyledInput, sendRequest, ThemeSelector, LanguageSelector, Footer, StyledInputDiv, signOut } from '../utils/additional';
 import languages from '../utils/languages';
-require('dotenv').config();
 
 
 const Container = styled.div`
@@ -22,10 +21,6 @@ class AuthPage extends React.Component {
       showLoadingCircle: false,
       showResponse: false
     }
-  }
-
-  componentDidMount() {
-    document.title = languages[this.props.language].general.page_titles.auth;
   }
 
   handleClick() {

@@ -6,7 +6,8 @@ import themes from './utils/themes.js';
 import Root from './components/root.js';
 import { router } from './utils/router.js';
 import { createBrowserHistory } from 'history';
-import { updateUserData } from './utils/additional.js';
+import { redirectIfEmptyUserProfileFields, updateUserData } from './utils/additional.js';
+import languages from './utils/languages';
 
 let history = createBrowserHistory();
 
@@ -51,6 +52,7 @@ function changeLanguage(languageName) {
 
   document.querySelector('html').setAttribute('lang', languageName);
   localStorage.setItem('language', languageName);
+  document.title = languages[languageName].general.page_titles[state.page];
   render();
 }
 
@@ -90,14 +92,16 @@ function changePage(href) {
       state.error = res.error
     }
 
+    document.title = languages[state.language].general.page_titles[res.page];
 
     render();
   })
 }
 
 setUpLangAndTheme();
-changePage(window.location.href);
 updateUserData(history);
+changePage(window.location.href);
+redirectIfEmptyUserProfileFields(history);
 
 
 window.addEventListener('hashchange', changePage(window.location.href));

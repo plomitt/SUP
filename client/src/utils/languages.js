@@ -14,10 +14,10 @@ const languages = {
       },
       page_titles: {
         error: 'SUP | Error',
-        auth: 'SUP | Authorization',
+        authorization: 'SUP | Authorization',
         signin: 'SUP | Signin',
         signup: 'SUP | Signup',
-        userprefpage: 'SUP | Preferences',
+        userpreferences: 'SUP | Preferences',
         landing: 'SUP',
         work: 'SUP | Work',
       },
@@ -141,6 +141,21 @@ const languages = {
       'go_back': 'Go Back'
     },
     user_preferences_page: {
+      success: 'Success',
+      failure: 'Failure',
+      not_specified: 'Not specified',
+      emptyFields: {
+        name: 'Name',
+        surname: 'Surname',
+        pfp: 'Profile picture',
+        grade: 'Grade',
+        bio: 'Bio',
+        subjectsCanHelp: 'Subjects you can help with',
+        subjectsNeedHelp: 'Subjects you need help with',
+        phone: 'Phone number',
+        title: 'Empty fields',
+        body: 'Plesase, fill out these fields first:'
+      },
       verifification: {
         title: 'Account is: ',
         verified: 'Verified',
@@ -240,10 +255,10 @@ const languages = {
       },
       page_titles: {
         error: 'SUP | Ошибка',
-        auth: 'SUP | Авторизация',
+        authorization: 'SUP | Авторизация',
         signin: 'SUP | Войти',
         signup: 'SUP | Регистрация',
-        userprefpage: 'SUP | Настройки',
+        userpreferences: 'SUP | Настройки',
         landing: 'SUP',
         work: 'SUP | Работа',
       },
@@ -367,6 +382,21 @@ const languages = {
       'go_back': 'Назад'
     },
     user_preferences_page: {
+      success: 'Успех',
+      failure: 'Сбой',
+      not_specified: 'Отсутствует',
+      emptyFields: {
+        name: 'Имя',
+        surname: 'Фамилия',
+        pfp: 'Аватар',
+        grade: 'Класс',
+        bio: 'Био',
+        subjectsCanHelp: 'Предметы, с которыми вы можете помочь',
+        subjectsNeedHelp: 'Предметы, с которыми вам нужна помощь',
+        phone: 'Номер телефона',
+        title: 'Незаполненные поля',
+        body: 'Пожалуйста, заполните следующие поля:'
+      },
       verifification: {
         title: 'Аккаунт: ',
         verified: 'Подтверждён',

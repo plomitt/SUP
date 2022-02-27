@@ -96,8 +96,6 @@ class LandingPage extends React.Component {
   }
 
   componentDidMount() {
-    document.title = languages[this.props.language].general.page_titles.landing;
-
     window.addEventListener('resize', this.windowSizeChanged);
   }
 

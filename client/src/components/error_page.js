@@ -4,15 +4,12 @@ import style from '../styles/error_page.module.css';
 import logo from '../media/sup_logo.png';
 import { withTheme } from 'styled-components';
 import languages from '../utils/languages';
-require('dotenv').config();
 
 const StyledA = styled.a`
   color: ${props => props.theme.textColor};
 `
 
 function ErrorPage(props) {
-  document.title = languages[props.language].general.page_titles.error;
-
   return (
     <div className={style.container}>
       <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
