@@ -32,7 +32,7 @@ app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 app.use(bodyParser.json());
 
 const handler = express.static('../client/build');
-const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work'];
+const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost'];
 routes.forEach( route => app.use(route, handler) );
 
 
@@ -60,6 +60,14 @@ app.use(session({
 //   next();
 // })
 
+const reportSchema = new mongoose.Schema({
+  id: String,
+  userId: String,
+  targetType: String,
+  targetId: String
+})
+const Report = mongoose.model('Report', reportSchema);
+
 const userSchema = new mongoose.Schema({
   id: String,
   pfp: String,
@@ -74,9 +82,21 @@ const userSchema = new mongoose.Schema({
   accessLevel: Number,
   role: String,
   subjectsNeedHelp: Array,
-  subjectsCanHelp: Array
+  subjectsCanHelp: Array,
+  postsUserRespondedTo: Array,
+  usersRespondedToUser: Array
 });
 const User = mongoose.model('User', userSchema);
+
+const postSchema = new mongoose.Schema({
+  id: String,
+  userId: String,
+  title: String,
+  description: String,
+  deadline: String,
+  subjects: Array
+});
+const Post = mongoose.model('Post', postSchema);
 
 async function findUserInDB(id) {
   return await User.find({});
@@ -123,7 +143,7 @@ function udpateUser(id, toUpdate) {
     {id: id},
     {$set: toUpdate}
   ).then(res => {
-    if (res.ok === 1) {
+    if (res.nModified === 1) {
       return 'success'
     } else {
       return 'error'
@@ -141,10 +161,21 @@ function parseData(req, res, next) {
 }
 
 function checkSignin(req, res, next) {
-  db.collection('sessions').findOne({ 'session.sessionId': req.session.sessionId })
-  .then(session => {
-    if (session !== null) {
-      next();
+  User.findOne({id: req.session.userId})
+  .then(user => {
+    if (user !== null) {
+      db.collection('sessions').findOne({ 'session.sessionId': req.session.sessionId })
+      .then(session => {
+        if (session !== null) {
+          if (session.session.userId === user.id) {
+            next();
+          } else {
+            res.send('error');
+          }
+        } else {
+          res.send('error');
+        }
+      })
     } else {
       res.send('error');
     }
@@ -192,7 +223,9 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
               verified: user.verified,
               role: user.role,
               subjectsNeedHelp: user.subjectsNeedHelp,
-              subjectsCanHelp: user.subjectsCanHelp
+              subjectsCanHelp: user.subjectsCanHelp,
+              postsUserRespondedTo: user.postsUserRespondedTo,
+              usersRespondedToUser: user.usersRespondedToUser
             }
           });
         } else {
@@ -279,7 +312,9 @@ app.get('/getuserdata', urlencodedParser, checkSignin, function(req, res) {
           verified: user.verified,
           role: user.role,
           subjectsNeedHelp: user.subjectsNeedHelp,
-          subjectsCanHelp: user.subjectsCanHelp
+          subjectsCanHelp: user.subjectsCanHelp,
+          postsUserRespondedTo: user.postsUserRespondedTo,
+          usersRespondedToUser: user.usersRespondedToUser
         }
       })
     } else {
@@ -296,33 +331,543 @@ app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, che
   User.findOne({id: req.session.userId})
   .then(user => {
     if (user !== null) {
-      let toUpdate = {};
+      new Promise((resolve, reject) => {
 
-      if (dataToUpdateName === 'name') {
-        toUpdate = {
-          name: data[1],
-          surname: data[2]
+        if (dataToUpdateName === 'name') {
+          if (checkName(data[1]) === true && checkName(data[2]) === true) {
+            resolve({
+              name: data[1],
+              surname: data[2]
+            });
+          } else {
+            reject('error');
+          }
+        } else if (dataToUpdateName === 'email') {
+          if (checkEmail(data[1]) === true  && checkRole(data[2]) === true) {
+            User.find({email: data[1]})
+            .then(users => {
+              if (users.length === 0) {
+                resolve({
+                  email: data[1],
+                  role: data[2],
+                  verified: false,
+                });
+              } else {
+                reject('email_taken');
+              }
+            })
+          } else {
+            error = true;
+          }
+        } else if (dataToUpdateName === 'password') {
+          if (checkPassword(data[1]) === true) {
+            resolve({
+              password: encryptPassword(data[1])
+            });
+          } else {
+            reject('error');
+          }
+        } else if (dataToUpdateName === 'subjectsNeedHelp' || dataToUpdateName === 'subjectsCanHelp') {
+          let temp = {};
+          temp[dataToUpdateName] = data[1];
+          resolve(temp);
+        } else {
+          if (data[1].length !== 0) {
+            let temp = {};
+            temp[dataToUpdateName] = data[1];
+            resolve(temp);
+          } else {
+            reject('error');
+          }
         }
-      } else if (dataToUpdateName === 'email') {
-        toUpdate = {
-          email: data[1],
-          role: data[2],
-          verified: false,
-        }
-      } else if (dataToUpdateName === 'password') {
-        toUpdate[dataToUpdateName] = encryptPassword(data[1]);
-      } else {
-        toUpdate[dataToUpdateName] = data[1];
-      }
+      }).then(toUpdate => {
+        udpateUser(user.id, toUpdate)
+        .then(result => {
+          res.send({status: result});
+        })
+      }).catch(reason => {
+        res.send({status: reason});
+      });
 
-      udpateUser(user.id, toUpdate)
-      .then(result => {
-        res.send({status: result});
-      })
     } else {
       res.send({status: 'error'});
     }
   })
+});
+
+function checkIfUserOwnsPost(req, res, next) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'new') {
+    next();
+  } else {
+    Post.findOne({id: data[1]})
+    .then(post => {
+      if (post !== null) {
+        if (post.userId === req.session.userId) {
+          next();
+        } else {
+          res.send({status: 'error'});
+        }
+      } else {
+        res.send({status: 'error'});
+      }
+    })
+  }
+}
+
+app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwnsPost, function(req, res) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'new') {
+    const newPost = new Post({
+      id: uuidv4(),
+      userId: req.session.userId,
+      title: data[2],
+      description: data[3],
+      deadline: data[4],
+      subjects: data[5]
+    });
+    newPost.save();
+
+    res.send({
+      status: 'ok',
+      type: 'new'
+    });
+  }
+
+  if (data[0] === 'update') {
+    Post.updateOne(
+      {id: data[1]},
+      {$set: {
+        title: data[2],
+        description: data[3],
+        deadline: data[4],
+        subjects: data[5]
+      }}
+    ).then(result => {
+      if (result.nModified === 1) {
+        res.send({
+          status: 'ok',
+          type: 'update'
+        });
+      } else {
+        res.send({
+          status: 'error'
+        });
+      }
+    })
+  }
+
+  if (data[0] === 'delete') {
+    Post.findOne({id: data[1]})
+    .then(post => {
+      if (post !== null) {
+        Post.deleteOne(
+          {id: post.id}
+        ).then(result => {
+          if (result.deletedCount === 1) {
+            User.findOne({id: post.userId})
+            .then(postOwner => {
+              if (postOwner !== null) {
+                let temp = postOwner.usersRespondedToUser;
+                let usersToUpdate = [];
+
+                for (let i = temp.length - 1; i >= 0; i--) {
+                  if (temp[i].postId === post.id) {
+                    usersToUpdate.push(temp[i].userId);
+                    temp.splice(i, 1);
+                  }
+                }
+
+
+                udpateUser(postOwner.id, {
+                  usersRespondedToUser: temp
+                }).then(result => {
+                  if (result === 'success') {
+                    let updates = [];
+
+                    for (let i = 0; i <= usersToUpdate.length - 1; i++) {
+                      updates.push(new Promise((resolve, reject) => {
+                        User.findOne({id: usersToUpdate[i]})
+                        .then(user => {
+                          if (user !== null) {
+                            let temp = user.postsUserRespondedTo;
+
+                            for (let i = temp.length - 1; i >= 0; i--) {
+                              if (temp[i].postId === post.id) {
+                                temp.splice(i, 1);
+                              }
+                            }
+
+                            udpateUser(user.id, {
+                              postsUserRespondedTo: temp
+                            }).then(result1 => {
+                              if (result1 === 'success') {
+                                resolve();
+                              } else {
+                                reject('error');
+                              }
+                            })
+
+                          } else {
+                            reject('usr_not_found');
+                          }
+                        })
+                      }))
+                    }
+
+                    Promise.all(updates)
+                    .then(() => {
+                      res.send({ status: 'ok' });
+                    }).catch(error => {
+                      console.log(error);
+                      res.send({ status: 'error' });
+                    })
+
+
+                  } else {
+                    res.send({ status: 'error' });
+                  }
+                })
+              } else {
+                res.send({ status: 'ok' });
+              }
+            })
+          } else {
+            res.send({ status: 'error'  });
+          }
+        })
+      } else {
+        res.send({ status: 'error' });
+      }
+    })
+  }
+});
+
+function generatePosts(posts, pageNumber) {
+  const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
+  const start = pageNumber * postsPerPage;
+  const postsAmount = posts.length - 1;
+  const fEnd = start + postsPerPage - 1;
+  const end = fEnd > postsAmount ? postsAmount : fEnd;
+
+  let newPosts = [];
+
+  for (let i = start; i <= end; i++) {
+    const currentPost = posts[i];
+    const promise = new Promise((resolve, reject) => {
+      if (currentPost !== undefined) {
+        User.findOne({id: currentPost.userId})
+        .then(usr => {
+          let post = JSON.parse(JSON.stringify(currentPost));
+    
+          post.userName = usr.name;
+          post.userSurname = usr.surname;
+          post.userGrade = usr.grade;
+          post.userPfp = usr.pfp;
+    
+          resolve(post);
+        })
+      } else {
+        reject();
+      }
+    })
+
+    newPosts.push(promise);
+  }
+
+  return newPosts;
+}
+
+app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, res) {
+  const data = req.app.locals.data;
+  const reqSource = data[0];
+  const pageNumber = data[1] - 1;
+  const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
+
+  if (reqSource === 'workpage_list') {
+    Post.find({})
+    .then(posts => {
+      Promise.all(generatePosts(posts, pageNumber))
+      .then(newPosts => {
+        res.send({
+          status: 'ok',
+          posts: newPosts,
+          amountOfPages: Math.ceil(posts.length/postsPerPage)
+        })
+      }).catch(() => {
+        res.send({
+          status: 'error',
+          posts: [],
+          amountOfPages: 1
+        })
+      })
+    })
+  }
+
+  if (reqSource === 'editpost_page') {
+    Post.findOne({ id: data[1] })
+    .then(post => {
+      if (post.userId === req.session.userId) {
+        res.send({
+          status: 'ok',
+          post: post
+        })
+      } else {
+        res.send({status: 'error'});
+      }
+    })
+  }
+
+  if (reqSource === 'viewpost_page') {
+    Post.findOne({ id: data[1] })
+    .then(post => {
+      User.findOne({id: post.userId})
+      .then(user => {
+        res.send({
+          status: 'ok',
+          post: post,
+          userName: user.name,
+          userSurname: user.surname,
+          userGrade: user.grade,
+          userPfp: user.pfp
+        })
+      })
+    })
+  }
+});
+
+app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'add') {
+    User.findOne({id: req.session.userId})
+    .then(user => {
+      Post.findOne({id: data[1]})
+      .then(post => {
+        if (post !== null) {
+          User.findOne({id: post.userId})
+          .then(postOwner => {
+            if (postOwner !== null) {
+              if (user.id !== postOwner.id) {
+                if (data[0] === 'add') {
+                  let arr1 = user.postsUserRespondedTo;
+                  let arr2 = postOwner.usersRespondedToUser;
+  
+                  const check1 = arr1.some(e => e.postId === post.id);
+                  const check2 = arr2.some(e => e.postId === post.id && e.userId === user.id);
+  
+                  
+                  if (check1 && check2) {
+                    res.send({
+                      status: 'already_responded'
+                    });
+                  } else if ((!check1 && check2) || (check1 && !check2)) {
+                    res.send({
+                      status: 'error'
+                    });
+                  } else {
+                    arr1.push({
+                      postId: post.id,
+                      status: 'pending'
+                    })
+        
+                    udpateUser(user.id, {
+                      postsUserRespondedTo: arr1
+                    })
+        
+                    arr2.push({
+                      userId: user.id,
+                      postId: post.id,
+                      status: 'pending'
+                    })
+    
+                    udpateUser(postOwner.id, {
+                      usersRespondedToUser: arr2
+                    })
+    
+                    res.send({ status: 'ok' });
+                  }
+  
+                }
+              } else {
+                res.send({ status: 'error' });
+              }
+            } else {
+              res.send({ status: 'error' });
+            }
+          })
+        } else {
+          res.send({ status: 'error' });
+        }
+      })
+    })
+  }
+
+  if (data[0] === 'accept') {
+    User.findOne({id: req.session.userId})
+    .then(postOwner => {
+      Post.findOne({id: data[1]})
+      .then(post => {
+        if (post !== null) {
+          let temp = postOwner.usersRespondedToUser;
+          let usersToUpdate = [];
+
+          for (let i = temp.length - 1; i >= 0; i--) {
+            if (temp[i].postId === post.id && temp[i].userId === data[2]) {
+              temp[i].status = 'accepted';
+            } else if (temp[i].postId === post.id && temp[i].userId !== data[2]) {
+              usersToUpdate.push(temp[i].userId);
+              temp.splice(i, 1);
+            }
+          }
+
+          udpateUser(postOwner.id, {
+            usersRespondedToUser: temp
+          }).then(result => {
+            if (result === 'success') {
+              let updates = [];
+
+              for (let i = 0; i < usersToUpdate.length; i++) {
+                updates.push(new Promise((resolve, reject) => {
+                  User.findOne({id: usersToUpdate[i]})
+                  .then(user => {
+                    if (user !== null) {
+                      let temp = user.postsUserRespondedTo;
+
+                      for (let i = 0; i < temp.length; i++) {
+                        if (temp[i].postId === post.id) {
+                          if (user.id === data[2]) {
+                            temp[i].status = 'accepted';
+                          } else {
+                            temp[i].status = 'declined';
+                          }
+                          break;
+                        }
+                      }
+
+
+                      udpateUser(user.id, {
+                        postsUserRespondedTo: temp
+                      }).then(result1 => {
+                        if (result1 === 'success') {
+                          resolve();
+                        } else {
+                          reject('error');
+                        }
+                      })
+                    } else {
+                      reject('usr_not_found');
+                    }
+                  })
+                }))
+              }
+
+              Promise.all(updates)
+              .then(() => {
+                res.send({ status: 'ok' });
+              }).catch(error => {
+                res.send({ status: 'error' });
+              })
+
+            } else {
+              res.send({ status: 'error' });
+            }
+          })
+
+        } else {
+          res.send({ status: 'error' });
+        }
+      })
+    })
+  }
+
+
+});
+
+app.post('/report', urlencodedParser, parseData, checkSignin, function(req, res) {
+  const data = req.app.locals.data;
+
+  User.findOne({id: req.session.userId})
+  .then(user => {
+    if (data[1] === 'post') {
+      Post.findOne({id: data[2]})
+      .then(post => {
+        if (post !== null) {
+          if (post.userId !== user.id) {
+            if (data[0] === 'add') {
+              const newReport = new Report({
+                id: uuidv4(),
+                userId: req.session.userId,
+                targetType: data[1],
+                targetId: post.id
+              });
+              newReport.save();
+            }
+
+            res.send({
+              status: 'ok'
+            });
+          } else {
+            res.send({
+              status: 'error'
+            });
+          }
+        } else {
+          res.send({
+            status: 'error'
+          });
+        }
+      })
+    }
+  })
+
+});
+
+app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, function(req, res) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'viewpost_page') {
+    const postId = data[1];
+    let responses = [];
+
+    User.findOne({id: req.session.userId})
+    .then(postOwner => {
+      
+      postOwner.usersRespondedToUser.forEach(e => {
+        if (e.postId === postId) {
+          const promise = new Promise((resolve, reject) => {
+            User.findOne({id: e.userId})
+            .then(user => {
+              
+              resolve({
+                userId: user.id,
+                userName: user.name,
+                userSurname: user.surname,
+                userGrade: user.grade,
+                userPfp: user.pfp
+              })
+            })
+          })
+
+          responses.push(promise);
+        }
+      })
+
+      Promise.all(responses)
+      .then(responses => {
+        res.send({
+          status: 'ok',
+          responses: responses
+        })
+      }).catch(error => {
+        res.send({ status: 'error' });
+      })
+    })
+
+
+  }
 });
 
 var server = app.listen(8888, function() {

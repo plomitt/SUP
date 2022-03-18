@@ -3,6 +3,7 @@ import placeholder from '../media/placeholder_orange.png';
 const languages = {
   en: {
     general: {
+      access_denied: 'Access denied',
       languageSelect: {
         en: 'English',
         ru: 'Russian'
@@ -25,10 +26,18 @@ const languages = {
         signin_btn: 'Sign in',
         landing_text: 'Home',
         signout_btn: 'Sign out',
+        cancel_btn: 'Cancel',
+        signout_title: 'Sign out?',
         link_user_pref_page: 'Preferences',
         work: 'Find work',
         talent: 'Find talent',
-        myjobs: 'My Jobs'
+        myjobs: 'My Jobs',
+        publish_btn: 'Submit',
+        back_btn: 'Back',
+        edit_btn: 'Edit',
+        report_btn: 'Report',
+        delete_btn: 'Delete',
+        refresh_btn: 'Refresh'
       },
       create_account: 'Create account',
       server_error_text: 'Something went wrong, please try again later',
@@ -140,6 +149,59 @@ const languages = {
       '500': 'Internal server error',
       'go_back': 'Go Back'
     },
+    edit_post_page: {
+      title: 'Title',
+      description: 'Description',
+      deadline: 'Deadline',
+      subjects: 'Subjects',
+      delete_btn: 'Delete',
+      delete_title: 'Delete post?',
+      errors: {
+        title: {
+          too_short: 'Title should be at least 5 characters long',
+          too_long: 'Title should be less than 50 characters',
+        },
+        description: {
+          too_short: 'Description should be at least 1 character long',
+          too_long: 'Description should be less than 250 characters',
+        },
+        deadline: {
+          empty: 'Please fill out this field',
+          not_in_future: 'Deadline should be in future'
+        },
+        subjects: {
+          empty: 'Please select at least 1 subject'
+        }
+      },
+      response: {
+        new: {
+          body: 'Post published successfully',
+          title: 'Success'
+        },
+        update: {
+          body: 'Post updated successfully',
+          title: 'Success'
+        },
+        delete: {
+          body: 'Post deleted successfully',
+          title: 'Success'
+        }
+      }
+    },
+    view_post_page: {
+      respond_btn: 'Respond',
+      responded_btn: 'Responded',
+      report_title: 'Report?',
+      respond_title: 'Respond?',
+      responded_text: 'Responded to the post successfully',
+      already_responded_text: 'Already responded to this post',
+      responses: 'Responses:',
+      no_responses: 'No responses yet',
+      accept: 'Accept',
+      decline: 'Decline',
+      accept_title: 'Accept help?',
+      decline_title: 'Decline help?'
+    },
     user_preferences_page: {
       success: 'Success',
       failure: 'Failure',
@@ -240,11 +302,21 @@ const languages = {
       signin_btn: 'Sign in',
       landing_text: 'Home',
       signout_btn: 'Sign out',
-      link_user_pref_page: 'Preferences'
+      link_user_pref_page: 'Preferences',
+      no_posts_found: 'No posts found',
+      reported_text: 'Post was reported',
+      post: {
+        subjects: 'Subjects: ',
+        deadline: 'Deadline: ',
+        edit: 'Edit',
+        delete: 'Delete',
+        report: 'Report'
+      }
     }
   },
   ru: {
     general: {
+      access_denied: 'Доступ запрещён',
       languageSelect: {
         en: 'Английский',
         ru: 'Русский'
@@ -266,10 +338,18 @@ const languages = {
         signin_btn: 'Войти',
         landing_text: 'Домой',
         signout_btn: 'Выйти',
+        cancel_btn: 'Отмена',
+        signout_title: 'Выйти?',
         link_user_pref_page: 'Настройки',
         work: 'Найти работу',
         talent: 'Найти исполнителя',
-        myjobs: 'Мои работы'
+        myjobs: 'Мои работы',
+        publish_btn: 'Опубликовать',
+        back_btn: 'Назад',
+        edit_btn: 'Изменить',
+        report_btn: 'Пожаловаться',
+        delete_btn: 'Удалить',
+        refresh_btn: 'Обновить'
       },
       create_account: 'Создать аккаунт',
       server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже',
@@ -381,6 +461,59 @@ const languages = {
       '500': 'Внутренняя ошибка сервера',
       'go_back': 'Назад'
     },
+    edit_post_page: {
+      title: 'Заголовок',
+      description: 'Описание',
+      deadline: 'Дедлайн',
+      subjects: 'Предметы',
+      delete_btn: 'Удалить',
+      delete_title: 'Удалить пост?',
+      errors: {
+        title: {
+          too_short: 'Заголовок должен быть длиннее 5 символов',
+          too_long: 'Заголовок должен быть короче 50 символов',
+        },
+        description: {
+          too_short: 'Описание должено быть длиннее 1 символа',
+          too_long: 'Описание должено быть короче 250 символов',
+        },
+        deadline: {
+          empty: 'Пожалуйста, заполните это поле',
+          not_in_future: 'Дедлайн должен быть в будущем'
+        },
+        subjects: {
+          empty: 'Пожалуйста, выберите хотя бы 1 предмет'
+        }
+      },
+      response: {
+        new: {
+          body: 'Пост успешно опубликован',
+          title: 'Успех'
+        },
+        update: {
+          body: 'Пост успешно обновлён',
+          title: 'Успех'
+        },
+        delete: {
+          body: 'Пост успешно удалён',
+          title: 'Успех'
+        }
+      }
+    },
+    view_post_page: {
+      respond_btn: 'Ответить',
+      responded_btn: 'Ответ отправлен',
+      report_title: 'Пожаловаться?',
+      respond_title: 'Ответить?',
+      responded_text: 'Ответ на пост успешен',
+      already_responded_text: 'Ответ на этот пост уже был отправлен',
+      responses: 'Ответы:',
+      no_responses: 'Ответов ещё нет',
+      accept: 'Принять',
+      decline: 'Отклонить',
+      accept_title: 'Принять помощь?',
+      decline_title: 'Отклонить помощь?'
+    },
     user_preferences_page: {
       success: 'Успех',
       failure: 'Сбой',
@@ -481,7 +614,16 @@ const languages = {
       signin_btn: 'Войти',
       landing_text: 'Домой',
       signout_btn: 'Выйти',
-      link_user_pref_page: 'Настройки'
+      link_user_pref_page: 'Настройки',
+      no_posts_found: 'Постов не найдено',
+      reported_text: 'Жалоба была отправлена',
+      post: {
+        subjects: 'Предметы: ',
+        deadline: 'Дэдлайн: ',
+        edit: 'Изменить',
+        delete: 'Удалить',
+        report: 'Пожаловаться'
+      }
     }
   }
 }

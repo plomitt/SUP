@@ -4,6 +4,16 @@ import hamburger_normal_white from '../media/hamburger_normal_white.png';
 import hamburger_normal_black from '../media/hamburger_normal_black.png';
 import hamburger_x_white from '../media/hamburger_x_white.png';
 import hamburger_x_black from '../media/hamburger_x_black.png';
+import dots_black from '../media/dots_icon_black.png';
+import dots_white from '../media/dots_icon_white.png';
+import new_icon_black from '../media/new_icon_black.png';
+import new_icon_white from '../media/new_icon_white.png';
+import arrow_right_black from '../media/arrow_right_black.png';
+import arrow_right_white from '../media/arrow_right_white.png';
+import arrow_left_black from '../media/arrow_left_black.png';
+import arrow_left_white from '../media/arrow_left_white.png';
+import refresh_icon_black from '../media/refresh_icon_black.png';
+import refresh_icon_white from '../media/refresh_icon_white.png';
 
 /*
 DARK
@@ -30,9 +40,15 @@ const themes = {
     safeColor: '#0a84ff',
     dangerColor: '#ED230D',
     darkerDangerColor: '#c21b0a',
+    greyedOutColor: '#757575',
     loadingCircle: black_circle,
     hamburger_normal: hamburger_normal_black,
-    hamburger_x: hamburger_x_black
+    hamburger_x: hamburger_x_black,
+    dots: dots_black,
+    new_icon: new_icon_black,
+    arrow_right: arrow_right_black,
+    arrow_left: arrow_left_black,
+    refresh_icon: refresh_icon_black
   },
   dark: {
     primaryColor: '#000000',
@@ -44,9 +60,15 @@ const themes = {
     safeColor: '#0a84ff',
     dangerColor: '#ED230D',
     darkerDangerColor: '#c21b0a',
+    greyedOutColor: '#757575',
     loadingCircle: white_circle,
     hamburger_normal: hamburger_normal_white,
-    hamburger_x: hamburger_x_white
+    hamburger_x: hamburger_x_white,
+    dots: dots_white,
+    new_icon: new_icon_white,
+    arrow_right: arrow_right_white,
+    arrow_left: arrow_left_white,
+    refresh_icon: refresh_icon_white
   },
   // dark: {
   //   layer1: '#000000',

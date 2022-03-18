@@ -7,6 +7,8 @@ import AuthorizationPage from './authorization_page';
 import ErrorPage from './error_page';
 import UserPreferencesPage from './user_pref_page';
 import WorkPage from './work_page';
+import EditPostPage from './editpost_page';
+import ViewPostPage from './viewpost_page';
 
 class Root extends React.Component {
   render() {
@@ -39,6 +41,14 @@ class Root extends React.Component {
 
     if (page === 'work') {
       return <WorkPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+    }
+
+    if (page === 'editpost') {
+      return <EditPostPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+    }
+
+    if (page === 'viewpost') {
+      return <ViewPostPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
   }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { withTheme } from 'styled-components';
 import style from '../styles/landing_page.module.css';
-import { Button, Menu, Footer } from '../utils/additional';
+import { Button, Menu, Footer, MessagePopUp } from '../utils/additional';
 import languages from '../utils/languages';
 
 function Rows(props) {
@@ -10,13 +10,11 @@ function Rows(props) {
 
   let rowsToShow = [];
 
-
   for (let i = 0; i < row_names.length; i++) {
     const row_name = row_names[i];
-    rowsToShow.push(<Row history={props.history} key={row_name} rowNumber={i} title={rows_content[row_name].title} text={rows_content[row_name].text} image={rows_content[row_name].image} language={props.language} />);
+    rowsToShow.push(<Row windowSize={props.windowSize} history={props.history} key={row_name} rowNumber={i} title={rows_content[row_name].title} text={rows_content[row_name].text} image={rows_content[row_name].image} language={props.language} />);
     rowsToShow.push(<span key={'sp' + i} className={style.horisontal_spacer}></span>);
   }
-
 
   return (
     <div className={style.rows_container}>
@@ -28,7 +26,7 @@ function Rows(props) {
 function Row(props) {
   let toShow;
 
-  if (props.rowNumber % 2 === 0 || window.innerWidth <= 830) {
+  if (props.rowNumber % 2 === 0 || props.windowSize === 'mobile') {
     toShow = (
       <div className={style.row}>
         <Text position='row_text_left' history={props.history} rowNumber={props.rowNumber} title={props.title} text={props.text} language={props.language} />
@@ -87,16 +85,22 @@ function Image(props) {
 class LandingPage extends React.Component {
   constructor(props) {
     super(props);
-    this.toggleMenu = this.toggleMenu.bind(this);
+    this.setMessage = this.setMessage.bind(this);
     this.windowSizeChanged = this.windowSizeChanged.bind(this);
 
     this.state = {
-      showMenu: false
+      showMessage: false,
+      messageTitle: 'temp title',
+      messageType: 'text',
+      titleType: 'normal',
+      preventAutoHiding: false,
+      windowSize: 'desktop'
     }
   }
 
   componentDidMount() {
     window.addEventListener('resize', this.windowSizeChanged);
+    this.windowSizeChanged();
   }
 
   componentWillUnmount() {
@@ -104,27 +108,38 @@ class LandingPage extends React.Component {
   }
 
   windowSizeChanged() {
-    if (window.innerWidth > 400) {
+    if (window.innerWidth > 830) {
       this.setState({
-        showMenu: false
+        windowSize: 'desktop'
+      })
+    } else {
+      this.setState({
+        windowSize: 'mobile'
       })
     }
   }
 
-  toggleMenu() {
+  setMessage(body, msgType, title, titleType) {
     this.setState({
-      showMenu: !this.state.showMenu
+      showMessage: body,
+      messageType: msgType,
+      messageTitle: title,
+      titleType: titleType,
+      preventAutoHiding: arguments[arguments.length - 1]
     })
   }
   
   render() {
     return (
       <div>
-        <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
-        <div id='pageBody'>
-          <Rows history={this.props.history} language={this.props.language}/>
+        <div id='page'>
+          <Menu setMessage={this.setMessage} history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} />
+          <div id='pageBody'>
+            <Rows windowSize={this.state.windowSize} history={this.props.history} language={this.props.language}/>
+          </div>
+          <Footer />
         </div>
-        <Footer />
+        <MessagePopUp elementId={'page'} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     )
   }

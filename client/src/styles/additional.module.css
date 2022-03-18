@@ -6,6 +6,7 @@
   max-height: 48px;
   margin: 0;
   margin-right: 10px;
+  aspect-ratio: 1;
 }
 
 .mobile_menubar_pfp {
@@ -16,6 +17,7 @@
   max-height: 24px;
   margin: 0;
   margin-right: 10px;
+  aspect-ratio: 1;
 }
 
 .userprefpage_menubar_pfpdesktop {
@@ -23,6 +25,7 @@
   border-radius: 50%;
   padding: 3px;
   max-width: 90px;
+  aspect-ratio: 1;
 }
 
 .userprefpage_menubar_pfpmobile {
@@ -31,6 +34,7 @@
   padding: 3px;
   width: 12vw;
   max-width: 50px;
+  aspect-ratio: 1;
 }
 
 .userprefpage_menubar_pfptablet {
@@ -39,6 +43,7 @@
   padding: 3px;
   width: 12vw;
   max-width: 75px;
+  aspect-ratio: 1;
 }
 
 .userprefpage_menubar_pfpdesktop:hover, .userprefpage_menubar_pfpmobile:hover, .userprefpage_menubar_pfptablet:hover {
@@ -48,6 +53,17 @@
 
 .desktop_menubar_pfp:hover, .mobile_menubar_pfp:hover {
   cursor: pointer;
+}
+
+.work_page_post_pfp {
+  border: solid white 2px;
+  border-radius: 50%;
+  padding: 1px;
+  max-width: 30px;
+  max-height: 30px;
+  margin: 0;
+  margin-right: 10px;
+  aspect-ratio: 1;
 }
 
 
@@ -95,6 +111,27 @@
   border-bottom-width: 10px;
 
   border-color: black;
+}
+
+.menu_new_btn_container {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  right: 0;
+
+  margin-right: 66px;
+}
+
+
+.menu_new_btn {
+  max-width: 32px;
+  max-height: 32px;
+}
+
+.menu_new_btn:hover {
+  cursor: pointer;
+  opacity: 0.8;
 }
 
 .menu_desktop_dropdown_container {

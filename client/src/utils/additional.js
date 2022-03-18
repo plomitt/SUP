@@ -98,6 +98,51 @@ export const Button = styled.button`
   }
 `
 
+export const DangerButton = styled.button`
+  display: inline-block;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${props => props.theme.borderColor};
+
+  font-size: 14pt;
+
+  height: 48px;
+
+  padding-left: 17px;
+  padding-right: 17px;
+
+  color: white;
+  background-color: ${props => props.theme.dangerColor};
+
+  &:hover {
+    cursor: pointer;
+    background-color: ${props => props.theme.darkerDangerColor};
+  }
+`
+
+export const DisabledButton = styled.button`
+  display: inline-block;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${props => props.theme.borderColor};
+
+  font-size: 14pt;
+
+  height: 48px;
+
+  padding-left: 17px;
+  padding-right: 17px;
+
+  background-color: ${props => props.theme.greyedOutColor};
+  color: white;
+
+  &:hover {
+    cursor: not-allowed;
+  }
+`
+
 export const StyledInput = styled.input`
   background-color: ${props => props.theme.inputBckgColor};
   color: ${props => props.theme.textColor};
@@ -389,6 +434,7 @@ export class MessagePopUp extends React.Component {
   hide() {
     try {
       document.getElementById(this.props.elementId).style = 'opacity: 1;';
+      this.props.callback();
     } catch (e) {}
     this.props.setMessage(false, false, false, false, false);
   }
@@ -442,10 +488,6 @@ export class MessagePopUp extends React.Component {
       </PopUp>
       )
     } else {
-      try {
-        document.getElementById(this.props.elementId).style = 'opacity: 1;';
-      } catch (e) {}
-
       return (
         <div></div>
       )
@@ -612,15 +654,15 @@ const SelectedP = styled.p`
   }
 `
 
-function confirmSignOut(setMessage, history) {
+function confirmSignOut(setMessage, history, language) {
   const body = (
     <div className={style.dialog_btn_container}>
-      <Button onClick={() => { setMessage(false, false, false, false, false); }}>Cancel</Button>
-      <SelectedP className={style.dialog_confirm} onClick={() => { signOut(); history.push('/'); }}>Sign out</SelectedP>
+      <Button onClick={() => { setMessage(false, false, false, false, false); }}>{languages[language].general.menu.cancel_btn}</Button>
+      <SelectedP className={style.dialog_confirm} onClick={() => { setMessage(false, false, false, false, false); signOut(); history.push('/'); }}>{languages[language].general.menu.signout_btn}</SelectedP>
     </div>
   )
 
-  setMessage(body, 'other', 'Sign out?', 'normal', true);
+  setMessage(body, 'other', languages[language].general.menu.signout_title, 'normal', true);
 }
 
 export function LoadingCircle(props) {
@@ -637,10 +679,19 @@ export function PFP(props) {
   const user = JSON.parse(localStorage.getItem('user'));
   
   let pfp;
-  if (user.pfp === 'default' || user.pfp === undefined) {
-    pfp = placeholder_pfp;
+  
+  if (props.type === 'work_page_post_pfp') {
+    if (props.pfp === 'default' || props.pfp === undefined || props.pfp === '') {
+      pfp = placeholder_pfp;
+    } else {
+      pfp = 'data:image/png;base64,' + props.pfp;
+    }
   } else {
-    pfp = 'data:image/png;base64,' + user.pfp;
+    if (user.pfp === 'default' || user.pfp === undefined || user.pfp === '') {
+      pfp = placeholder_pfp;
+    } else {
+      pfp = 'data:image/png;base64,' + user.pfp;
+    }
   }
 
   return (
@@ -669,11 +720,16 @@ function MenuBarDesktop(props) {
       <StyledMenuBar className={style.menu_bar_desktop}>
         <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
         <MenuBarCenterText history={props.history} style={style} language={props.language} />
-        <DropdownContainer className={style.flex_box}>
-          <div className={style.menubar_spacer}></div>
-          <PFP theme={props.theme} type={'desktop_menubar_pfp'} onClick={() => { props.history.push('/userpreferences') }}/>
-          <MenuBarDesktopDropdown setMessage={props.setMessage} history={props.history} style={style} changeTheme={props.changeTheme} changeLanguage={props.changeLanguage} language={props.language} />
-        </DropdownContainer>
+        <div>
+          <div className={style.menu_new_btn_container}>
+            <img onClick={() => { props.history.push('/editpost'); }} src={props.theme.new_icon} alt={'new post'} className={style.menu_new_btn}/>
+          </div>
+          <DropdownContainer className={style.flex_box}>
+            <div className={style.menubar_spacer}></div>
+            <PFP theme={props.theme} type={'desktop_menubar_pfp'} onClick={() => { props.history.push('/userpreferences') }}/>
+            <MenuDropdown setMessage={props.setMessage} history={props.history} style={style} changeTheme={props.changeTheme} changeLanguage={props.changeLanguage} language={props.language} />
+          </DropdownContainer>
+        </div>
       </StyledMenuBar>
     )
   }
@@ -682,7 +738,7 @@ function MenuBarDesktop(props) {
 function MenuBarCenterText(props) {
   const destination = props.history.location.pathname;
 
-  if (destination === '/work') {
+  if (destination === '/work' || destination === '/work/') {
     return (
       <div className={style.flex_box}>
         <StyledSelectedText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledSelectedText>
@@ -690,7 +746,7 @@ function MenuBarCenterText(props) {
         <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
-  } else if (destination === '/talent') {
+  } else if (destination === '/talent' || destination === '/talent/') {
     return (
       <div className={style.flex_box}>
         <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
@@ -698,7 +754,7 @@ function MenuBarCenterText(props) {
         <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
-  } else if (destination === '/myjobs') {
+  } else if (destination === '/myjobs' || destination === '/myjobs/') {
     return (
       <div className={style.flex_box}>
         <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
@@ -717,14 +773,14 @@ function MenuBarCenterText(props) {
   }
 }
 
-function MenuBarDesktopDropdown(props) {
+export function MenuDropdown(props) {
   return (
     <StyledDropdown className={style.menu_desktop_dropdown_container}>
       <StyledDesktopMenuBarDropdown>
         <li><StyledText onClick={() => props.history.push('/userpreferences')}>{languages[props.language].general.menu.link_user_pref_page}</StyledText></li>
         <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
         <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-        <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>
+        <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history, props.language); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>
       </StyledDesktopMenuBarDropdown>
     </StyledDropdown>
   )
@@ -778,7 +834,7 @@ function MenuBodyMobile(props) {
           <li><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
           <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
-          <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>
+          <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history, props.language); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>
         </StyledMenuBarMobileUl>
       </StyledDiv>
     )

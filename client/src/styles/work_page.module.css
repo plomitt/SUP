@@ -1,3 +1,170 @@
 .Applink {
   color: #61dafb;
 }
+
+.pageBody {
+  margin-top: 80px;
+  margin-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.post_box {
+  display: grid;
+  border-radius: 10px;
+  border: 1px solid #fff;
+  justify-self: center;
+  min-width: 300px;
+  width: -webkit-fill-available;
+  align-content: center;
+  position: relative;
+}
+
+.dots {
+  max-width: 24px;
+}
+
+.post_title {
+  font-size: 16pt;
+}
+
+.post_box p {
+  margin: 0;
+}
+
+.post_name_container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.post_name_container1 {
+  display: flex;
+  align-items: center;
+}
+
+.post_name_container1:hover, .dots:hover{
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.posts_container_6col, .posts_container_5col, .posts_container_4col, .posts_container_3col, .posts_container_2col, .posts_container_1col {
+  display: grid;
+  column-gap: 20px;
+  row-gap: 20px;
+
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.posts_container_6col {
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+.posts_container_5col {
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+
+.posts_container_4col {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.posts_container_3col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.posts_container_2col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.posts_container_1col {
+  grid-template-columns: 1fr;
+}
+
+
+.post_list {
+  padding: 0;
+  margin: 0;
+}
+
+.post_list li:first-child {
+  border-top: none;
+}
+
+.post_list li {
+  border-bottom: solid 1px;
+
+  list-style-type: none;
+
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.post_list li:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.post_list li:last-child {
+  border-bottom: none;
+}
+
+.post_list li:last-child:hover {
+  opacity: 1;
+  cursor: default;
+}
+
+
+.post_dropdown_container {
+  position: absolute;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  min-width: 90px;
+  border: 1px solid;
+  border-radius: 10px;
+  top: 205px;
+  right: 0;
+  z-index: 3;
+}
+
+.respond_btn:hover {
+  cursor: not-allowed;
+}
+
+
+.dialog_btn_container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.pagination_container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: fit-content;
+  min-width: 60px;
+}
+
+.arrow_left, .arrow_right {
+  max-height: 30px;
+}
+
+.arrow_left:hover, .arrow_right:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.arrow_left_hide, .arrow_right_hide {
+  opacity: 0;
+}
+
+.pagination_number {
+  margin-left: 8px;
+  margin-right: 8px;
+}

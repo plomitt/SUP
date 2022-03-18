@@ -63,6 +63,8 @@ const StyledTextarea = styled.textarea`
   max-width: 498px;
   height: fit-content;
   width: fit-content;
+
+  resize: none;
 `
 
 const StyledInputDiv = styled.div`
@@ -237,6 +239,14 @@ class Email extends React.Component {
                 showMenu: false
               })
               this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+            }
+
+            if (response.status === 'email_taken') {
+              this.setState({
+                showEmail2Field: false,
+                showMenu: false
+              })
+              this.props.setMessage(languages[this.props.language].general.email_error.email_taken, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
             }
           })
           
@@ -1411,8 +1421,8 @@ class UserPreferencesPage extends React.Component {
       messageTitle: 'temp title',
       messageType: 'text',
       titleType: 'normal',
-      menuType: 'desktop',
-      preventAutoHiding: false
+      preventAutoHiding: false,
+      menuType: 'desktop'
     }
   }
 
