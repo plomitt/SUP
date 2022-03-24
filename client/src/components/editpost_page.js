@@ -117,7 +117,7 @@ function checkDescription(desc) {
     return 'too_short';
   }
 
-  if (/(?=.{250,})/.test(desc)) {
+  if (/(?=.{500,})/.test(desc)) {
     return 'too_long';
   }
 
@@ -195,6 +195,8 @@ class PostPage extends React.Component {
             postId: postId
           });
           this.resize();
+
+          document.title = 'SUP | ' + response.post.title;
         }
 
         if (response.status === 'error') {
@@ -229,7 +231,7 @@ class PostPage extends React.Component {
       this.setState({
         menuType: 'desktop'
       })
-    } else if (window.innerWidth > 420 && window.innerWidth < 670) {
+    } else if (window.innerWidth > 450 && window.innerWidth < 670) {
       this.setState({
         menuType: 'tablet'
       })
@@ -491,7 +493,7 @@ class PostPage extends React.Component {
         <div id='page'>
           <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
           <div id='pageBody' className={style['pageBodydesktop']}>
-            <div className={style['pref_containerdesktop']}>
+            <div className={style['pref_container' + this.state.menuType]}>
               <ul className={style['settings_listdesktop']}>
                 <li>
                   {titleField}

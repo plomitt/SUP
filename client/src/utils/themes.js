@@ -14,6 +14,8 @@ import arrow_left_black from '../media/arrow_left_black.png';
 import arrow_left_white from '../media/arrow_left_white.png';
 import refresh_icon_black from '../media/refresh_icon_black.png';
 import refresh_icon_white from '../media/refresh_icon_white.png';
+import search_icon_black from '../media/search_icon_black.png';
+import search_icon_white from '../media/search_icon_white.png';
 
 /*
 DARK
@@ -39,6 +41,7 @@ const themes = {
     darkerAccentColor: '#0a6ac9',
     safeColor: '#0a84ff',
     dangerColor: '#ED230D',
+    greenColor: '#1EB100',
     darkerDangerColor: '#c21b0a',
     greyedOutColor: '#757575',
     loadingCircle: black_circle,
@@ -48,7 +51,8 @@ const themes = {
     new_icon: new_icon_black,
     arrow_right: arrow_right_black,
     arrow_left: arrow_left_black,
-    refresh_icon: refresh_icon_black
+    refresh_icon: refresh_icon_black,
+    search_icon: search_icon_black
   },
   dark: {
     primaryColor: '#000000',
@@ -59,6 +63,7 @@ const themes = {
     darkerAccentColor: '#0a6ac9',
     safeColor: '#0a84ff',
     dangerColor: '#ED230D',
+    greenColor: '#1EB100',
     darkerDangerColor: '#c21b0a',
     greyedOutColor: '#757575',
     loadingCircle: white_circle,
@@ -68,7 +73,8 @@ const themes = {
     new_icon: new_icon_white,
     arrow_right: arrow_right_white,
     arrow_left: arrow_left_white,
-    refresh_icon: refresh_icon_white
+    refresh_icon: refresh_icon_white,
+    search_icon: search_icon_white
   },
   // dark: {
   //   layer1: '#000000',

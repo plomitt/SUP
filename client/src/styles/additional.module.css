@@ -294,6 +294,10 @@
   align-items: center;
 }
 
+.dialog_btn_container p {
+  margin: 16px;
+}
+
 .dialog_confirm {
   margin-left: 70px;
   margin-right: 10px;

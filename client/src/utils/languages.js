@@ -21,6 +21,8 @@ const languages = {
         userpreferences: 'SUP | Preferences',
         landing: 'SUP',
         work: 'SUP | Work',
+        editpost: 'SUP | New post',
+        viewpost: 'SUP | View post'
       },
       menu: {
         signin_btn: 'Sign in',
@@ -163,7 +165,7 @@ const languages = {
         },
         description: {
           too_short: 'Description should be at least 1 character long',
-          too_long: 'Description should be less than 250 characters',
+          too_long: 'Description should be less than 500 characters',
         },
         deadline: {
           empty: 'Please fill out this field',
@@ -199,8 +201,19 @@ const languages = {
       no_responses: 'No responses yet',
       accept: 'Accept',
       decline: 'Decline',
-      accept_title: 'Accept help?',
-      decline_title: 'Decline help?'
+      accept_title: 'Accept response?',
+      decline_title: 'Decline response?',
+      cacnel_title: 'Cacnel acceptance?',
+      accepted_text: 'Response accepted successfully',
+      declined_text: 'Response declined successfully',
+      cancelled_text: 'Response cancelled successfully',
+      response_status: {
+        accepted: 'Accepted',
+        declined: 'Declined',
+        pending: 'Pending'
+      },
+      yes: 'Yes',
+      in_progress: 'In progress'
     },
     user_preferences_page: {
       success: 'Success',
@@ -311,7 +324,8 @@ const languages = {
         edit: 'Edit',
         delete: 'Delete',
         report: 'Report'
-      }
+      },
+      search_txt: 'Search...'
     }
   },
   ru: {
@@ -347,7 +361,7 @@ const languages = {
         publish_btn: 'Опубликовать',
         back_btn: 'Назад',
         edit_btn: 'Изменить',
-        report_btn: 'Пожаловаться',
+        report_btn: 'Жалоба',
         delete_btn: 'Удалить',
         refresh_btn: 'Обновить'
       },
@@ -475,7 +489,7 @@ const languages = {
         },
         description: {
           too_short: 'Описание должено быть длиннее 1 символа',
-          too_long: 'Описание должено быть короче 250 символов',
+          too_long: 'Описание должено быть короче 500 символов',
         },
         deadline: {
           empty: 'Пожалуйста, заполните это поле',
@@ -511,8 +525,19 @@ const languages = {
       no_responses: 'Ответов ещё нет',
       accept: 'Принять',
       decline: 'Отклонить',
-      accept_title: 'Принять помощь?',
-      decline_title: 'Отклонить помощь?'
+      accept_title: 'Принять ответ?',
+      decline_title: 'Отклонить ответ?',
+      cacnel_title: 'Отменить принятие?',
+      accepted_text: 'Ответ успешно принят',
+      declined_text: 'Ответ успешно отклонён',
+      cancelled_text: 'Ответ успешно оменён',
+      response_status: {
+        accepted: 'Принят',
+        declined: 'Отклонён',
+        pending: 'В ожидании'
+      },
+      yes: 'Да',
+      in_progress: 'Выполняется'
     },
     user_preferences_page: {
       success: 'Успех',
@@ -622,8 +647,9 @@ const languages = {
         deadline: 'Дэдлайн: ',
         edit: 'Изменить',
         delete: 'Удалить',
-        report: 'Пожаловаться'
-      }
+        report: 'Жалоба'
+      },
+      search_txt: 'Поиск...'
     }
   }
 }

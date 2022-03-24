@@ -99,6 +99,57 @@ const SafeP = styled.p`
   }
 `
 
+const LoadingCircleContainer = styled.div`
+  position: fixed;
+  top: 40%;
+  background-color: ${props => props.theme.inputBckgColor};
+  border-radius: 10px;
+  border: solid 1px;
+  border-color: ${props => props.theme.borderColor};
+`
+
+const SearchInput = styled.input`
+  background-color: ${props => props.theme.inputBckgColor};
+  color: ${props => props.theme.textColor};
+
+  width: -webkit-fill-available;
+  height: 54px;
+
+  border: none;
+  font-size: 15pt;
+`
+
+const StyledSearchbar = styled.div`
+  margin: auto;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${props => props.theme.borderColor};
+  
+  margin-top: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+
+  width: -webkit-fill-available;
+  max-width: 2864px;
+  min-width: 290px;
+  height: 56px;
+
+  font-size: 15pt;
+
+  padding-left: 5px;
+  padding-right: 5px;
+
+  align-items: center;
+
+  &:focus {
+    outline-style: none;
+    box-shadow: none;
+    border-color: transparent;
+  }
+`
+
 class PostDropdown extends React.Component {
   constructor(props) {
     super(props);
@@ -127,7 +178,7 @@ class PostDropdown extends React.Component {
     .then(response => {
       if (response.status === 'ok') {
         this.props.refreshPosts();
-        this.setMessage(languages[this.props.language].edit_post_page.response.delete.body, 'text', languages[this.props.language].edit_post_page.response.delete.title, 'success');
+        this.props.setMessage(languages[this.props.language].edit_post_page.response.delete.body, 'text', languages[this.props.language].edit_post_page.response.delete.title, 'success');
       } else {
         this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
       }
@@ -327,6 +378,16 @@ function Pagination(props) {
   )
 }
 
+function Searchbar(props) {
+  return (
+    <StyledSearchbar className={style.searchbar_container}>
+      <SearchInput id='search_input' placeholder={languages[props.language].work_page.search_txt} onKeyUp={(e) => { if (e.key === 'Enter') { props.refreshPosts(undefined, document.getElementById('search_input').value) } }}></SearchInput>
+      <img className={style.searchbar_refresh} src={props.theme.search_icon} alt={'s'} onClick={() => props.refreshPosts(undefined, document.getElementById('search_input').value) }></img>
+      <img className={style.searchbar_refresh} src={props.theme.refresh_icon} alt={'r'} onClick={() => props.refreshPosts() }></img>
+    </StyledSearchbar>
+  )
+}
+
 class WorkPage extends React.Component {
   constructor(props) {
     super(props);
@@ -358,14 +419,14 @@ class WorkPage extends React.Component {
     window.removeEventListener('resize', this.windowSizeChanged);
   }
 
-  refreshPosts(pageNumber) {
+  refreshPosts(pageNumber, filter) {
     this.setState({
       showLoadingCircle: true
     })
 
     const number = pageNumber === undefined ? this.state.pageNumber : pageNumber;
 
-    sendRequest('/getposts', 'POST', {data: JSON.stringify(['workpage_list', number])})
+    sendRequest('/getposts', 'POST', {data: JSON.stringify(['workpage_list', number, filter])})
     .then(response => {
 
       if (response.status === 'ok') {
@@ -446,7 +507,9 @@ class WorkPage extends React.Component {
     let loadingCircle;
     if (this.state.showLoadingCircle === true) {
       loadingCircle = (
-        <LoadingCircle theme={this.props.theme} />
+        <LoadingCircleContainer>
+          <LoadingCircle theme={this.props.theme}/>
+        </LoadingCircleContainer>
       )
     }
 
@@ -462,6 +525,7 @@ class WorkPage extends React.Component {
         <div id={'page'}>
           <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
           <div id='pageBody' className={style['pageBody']}>
+            <Searchbar theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts}/>
             <Posts menuType={this.state.menuType} posts={this.state.posts} history={this.props.history} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts} setMessage={this.setMessage}/>
             {noPostsMsg}
             {loadingCircle}

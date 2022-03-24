@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/viewpost_page.module.css';
-import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, DisabledButton, PFP, setUserData } from '../utils/additional';
+import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, DisabledButton, PFP, setUserData, stringifyPhone } from '../utils/additional';
 import languages from '../utils/languages';
 
 const StyledDropdownList = styled.ul`
@@ -98,14 +98,53 @@ const SafeP = styled.p`
   }
 `
 
+const GreenButton = styled.button`
+  display: inline-block;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${props => props.theme.greenColor};
+
+  font-size: 14pt;
+
+  height: 48px;
+
+  padding-left: 17px;
+  padding-right: 17px;
+
+  color: ${props => props.theme.greenColor};
+  background-color: ${props => props.theme.primaryColor};
+`
+
+const RedButton = styled.button`
+  display: inline-block;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${props => props.theme.dangerColor};
+
+  font-size: 14pt;
+
+  height: 48px;
+
+  padding-left: 17px;
+  padding-right: 17px;
+
+  color: ${props => props.theme.dangerColor};
+  background-color: ${props => props.theme.primaryColor};
+`
+
 class Responses extends React.Component {
   constructor(props) {
     super(props);
+    this.setDropdown = this.setDropdown.bind(this);
     this.fetchResponses = this.fetchResponses.bind(this);
     this.handleAccept = this.handleAccept.bind(this);
-    this.handleDecline = this.handleDecline.bind(this);
     this.confirmAccept = this.confirmAccept.bind(this);
+    this.handleDecline = this.handleDecline.bind(this);
     this.confirmDecline = this.confirmDecline.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.confirmCancel = this.confirmCancel.bind(this);
 
     this.state = {
       postId: getUrlParam('id'),
@@ -135,14 +174,14 @@ class Responses extends React.Component {
   }
 
   setDropdown(eKey, state) {
-    const dropdwon = document.getElementById('dropdown' + eKey);
+    const dropdown = document.getElementById('dropdown' + eKey);
   
     if (state === 'none') {
-      if (!dropdwon.matches(':hover')) {
-        dropdwon.style.display = 'none';
+      if (!dropdown.matches(':hover')) {
+        dropdown.style.display = 'none';
       }
     } else {
-      dropdwon.style.display = state;
+      dropdown.style.display = state;
     }
   }
 
@@ -151,6 +190,7 @@ class Responses extends React.Component {
     .then(response => {
       if (response.status === 'ok') {
         this.props.setMessage(languages[this.props.language].view_post_page.accepted_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
+        this.fetchResponses();
       }
 
       if (response.status === 'error') {
@@ -163,7 +203,22 @@ class Responses extends React.Component {
     sendRequest('/respond', 'POST', {data: JSON.stringify(['decline', this.state.postId, userId])})
     .then(response => {
       if (response.status === 'ok') {
-        this.props.setMessage(languages[this.props.language].view_post_page.accepted_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
+        this.props.setMessage(languages[this.props.language].view_post_page.declined_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
+        this.fetchResponses();
+      }
+
+      if (response.status === 'error') {
+        this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+      }
+    })
+  }
+
+  handleCancel(userId) {
+    sendRequest('/respond', 'POST', {data: JSON.stringify(['cancel', this.state.postId, userId])})
+    .then(response => {
+      if (response.status === 'ok') {
+        this.props.setMessage(languages[this.props.language].view_post_page.cancelled_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
+        this.fetchResponses();
       }
 
       if (response.status === 'error') {
@@ -195,6 +250,17 @@ class Responses extends React.Component {
     this.props.setMessage(body, 'other', languages[this.props.language].view_post_page.decline_title, 'normal', true);
   }
 
+  confirmCancel(userId) {
+    const body = (
+      <div className={style.dialog_btn_container}>
+        <Button onClick={() => { this.props.setMessage(false, false, false, false, false); }}>{languages[this.props.language].general.menu.cancel_btn}</Button>
+        <DangerP className={style.dialog_confirm} onClick={() => { this.props.setMessage(false, false, false, false, false, () => {}); this.handleCancel(userId); }}>{languages[this.props.language].view_post_page.yes}</DangerP>
+      </div>
+    )
+  
+    this.props.setMessage(body, 'other', languages[this.props.language].view_post_page.cacnel_title, 'normal', true);
+  }
+
   render() {
     let toShow;
     if (this.state.responses.length === 0) {
@@ -206,6 +272,41 @@ class Responses extends React.Component {
       let newResponses = [];
 
       for (let i = 0; i < responses.length; i++) {
+        let dropdown;
+        let responseStatus;
+        if (responses[i].status === 'pending') {
+          responseStatus = (
+            <p className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.pending}</p>
+          );
+
+          dropdown = [
+            <li onClick={() => this.confirmAccept(responses[i].userId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>,
+            <li onClick={() => this.confirmDecline(responses[i].userId)}><DangerP>{languages[this.props.language].view_post_page.decline}</DangerP></li>
+          ]
+        } else if (responses[i].status === 'accepted') {
+          const Green = styled.p`
+            color: ${props => props.theme.greenColor};
+          `
+          responseStatus = (
+            <Green className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.accepted}</Green>
+          );
+
+          dropdown = [
+            <li onClick={() => this.confirmCancel(responses[i].userId)}><DangerP>{languages[this.props.language].general.menu.cancel_btn}</DangerP></li>
+          ]
+        } else if (responses[i].status === 'declined') {
+          const Red = styled.p`
+            color: ${props => props.theme.dangerColor};
+          `
+          responseStatus = (
+            <Red className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.declined}</Red>
+          )
+
+          dropdown = [
+            <li onClick={() => this.confirmAccept(responses[i].userId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>
+          ]
+        }
+
         newResponses.push(
           <li className={style.responses_list_li}>
             <div className={style['post_name_container']}>
@@ -216,14 +317,14 @@ class Responses extends React.Component {
                   <p className={style['post_grade']}>{responses[i].userGrade}</p>
                 </div>
               </div>
+              {responseStatus}
               <img src={this.props.theme.dots} alt={':'} id={'dots' + i} className={style['dots']} onClick={() => { this.setDropdown(i, 'block'); }} onMouseOver={() => { this.setDropdown(i, 'block'); }} onMouseLeave={() => { this.setDropdown(i, 'none'); }}/>
             </div>
             <StyledDropdown id={'dropdown' + i} className={style.post_dropdown_container} onMouseLeave={() => { this.setDropdown(i, 'none'); }}>
               <StyledDropdownList>
-                <li onClick={() => this.confirmAccept(responses[i].userId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>
-                <li onClick={() => this.confirmDecline(responses[i].userId)}><DangerP>{languages[this.props.language].view_post_page.decline}</DangerP></li>
+                {dropdown}
               </StyledDropdownList>
-          </StyledDropdown>
+            </StyledDropdown>
           </li>
         )
       }
@@ -258,7 +359,6 @@ class PostPage extends React.Component {
     this.confirmRespond = this.confirmRespond.bind(this);
     this.windowSizeChanged = this.windowSizeChanged.bind(this);
 
-    
     this.state = {
       showMessage: false,
       messageTitle: 'temp title',
@@ -273,7 +373,8 @@ class PostPage extends React.Component {
       title: '',
       description: '',
       deadline: '',
-      postId: ''
+      postId: '',
+      responseStatus: ''
     }
 
     const postId = getUrlParam('id');
@@ -288,14 +389,19 @@ class PostPage extends React.Component {
             deadline: response.post.deadline,
             subjects: response.post.subjects,
             postId: response.post.id,
+            postStatus: response.post.status,
             userId: response.post.userId,
             userName: response.userName,
             userSurname: response.userSurname,
             userGrade: response.userGrade,
-            userPfp: response.userPfp
+            userPfp: response.userPfp,
+            userPhone: stringifyPhone(response.userPhone),
+            responseStatus: response.responseStatus
           });
+
+          document.title = 'SUP | ' + response.post.title;
         } else {
-          this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+          this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure', () => {this.props.history.push('/work')});
         }
       })
     }
@@ -315,7 +421,7 @@ class PostPage extends React.Component {
       this.setState({
         menuType: 'desktop'
       })
-    } else if (window.innerWidth > 420 && window.innerWidth < 670) {
+    } else if (window.innerWidth > 450 && window.innerWidth < 670) {
       this.setState({
         menuType: 'tablet'
       })
@@ -451,7 +557,6 @@ class PostPage extends React.Component {
     )
 
 
-    
     let buttons;
     if (getUserData('id') === this.state.userId) {
       buttons = (
@@ -467,11 +572,19 @@ class PostPage extends React.Component {
           <DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>
         );
       } else {
-        respondBtn = getUserData('postsUserRespondedTo').some(e => e.postId === this.state.postId) ? (
-          <DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>
-        ) : (
-          <Button id='nextbtn' className={style.next_btn} onClick={() => { this.confirmRespond(); }}>{languages[this.props.language].view_post_page.respond_btn}</Button>
-        );
+        if (this.state.responseStatus === 'pending') {
+          respondBtn = (<DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>)
+        } else if (this.state.responseStatus === 'accepted') {
+          respondBtn = (<GreenButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.accepted}</GreenButton>)
+        } else if (this.state.responseStatus === 'declined') {
+          respondBtn = (<RedButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.declined}</RedButton>)
+        } else {
+          if (this.state.postStatus === 'in_progress') {
+            respondBtn = (<DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.in_progress}</DisabledButton>)
+          } else {
+            respondBtn = (<Button id='nextbtn' className={style.next_btn} onClick={() => { this.confirmRespond(); }}>{languages[this.props.language].view_post_page.respond_btn}</Button>)
+          }
+        }
       }
 
       buttons = (
@@ -498,6 +611,19 @@ class PostPage extends React.Component {
       </div>
     )
 
+    let phoneNumberField;
+    if (this.state.responseStatus === 'accepted') {
+      phoneNumberField = (this.state.menuType === 'mobile') ? (
+        <div className={style.phone_number_container}>
+          <p className={style['phone_number_p' + this.state.menuType]}>{languages[this.props.language].user_preferences_page.phone.title}</p>
+          <p className={style['phone_number_p' + this.state.menuType]}>{this.state.userPhone}</p>
+        </div>
+      ) : (
+        <div className={style.phone_number_container}>
+          <p className={style['phone_number_p' + this.state.menuType]}>{languages[this.props.language].user_preferences_page.phone.title + this.state.userPhone}</p>
+        </div>
+      )
+    };
     
     let responsesList;
     if (this.state.userId === getUserData('id')) {
@@ -518,7 +644,7 @@ class PostPage extends React.Component {
         <div id='page'>
           <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
           <div id='pageBody' className={style['pageBodydesktop']}>
-            <div className={style['pref_containerdesktop']}>
+            <div className={style['pref_container' + this.state.menuType]}>
               <ul className={style['settings_listdesktop']}>
                 <li>
                   {titleField}
@@ -536,6 +662,7 @@ class PostPage extends React.Component {
                   {userField}
                 </li>
               </ul>
+              {phoneNumberField}
               {loadingCircle}
               {buttons}
             </div>

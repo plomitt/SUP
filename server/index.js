@@ -94,7 +94,8 @@ const postSchema = new mongoose.Schema({
   title: String,
   description: String,
   deadline: String,
-  subjects: Array
+  subjects: Array,
+  status: String
 });
 const Post = mongoose.model('Post', postSchema);
 
@@ -143,7 +144,7 @@ function udpateUser(id, toUpdate) {
     {id: id},
     {$set: toUpdate}
   ).then(res => {
-    if (res.nModified === 1) {
+    if (res.ok === 1) {
       return 'success'
     } else {
       return 'error'
@@ -189,6 +190,63 @@ function checkReqSize(req, res, next) {
     next();
   }
 }
+
+function checkIfUserOwnsPost(req, res, next) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'new') {
+    next();
+  } else {
+    Post.findOne({id: data[1]})
+    .then(post => {
+      if (post !== null) {
+        if (post.userId === req.session.userId) {
+          next();
+        } else {
+          res.send({status: 'error'});
+        }
+      } else {
+        res.send({status: 'error'});
+      }
+    })
+  }
+}
+
+function generatePosts(posts, pageNumber) {
+  const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
+  const start = pageNumber * postsPerPage;
+  const postsAmount = posts.length - 1;
+  const fEnd = start + postsPerPage - 1;
+  const end = fEnd > postsAmount ? postsAmount : fEnd;
+
+  let newPosts = [];
+
+  for (let i = start; i <= end; i++) {
+    const currentPost = posts[i];
+    const promise = new Promise((resolve, reject) => {
+      if (currentPost !== undefined) {
+        User.findOne({id: currentPost.userId})
+        .then(usr => {
+          let post = JSON.parse(JSON.stringify(currentPost));
+    
+          post.userName = usr.name;
+          post.userSurname = usr.surname;
+          post.userGrade = usr.grade;
+          post.userPfp = usr.pfp;
+    
+          resolve(post);
+        })
+      } else {
+        reject();
+      }
+    })
+
+    newPosts.push(promise);
+  }
+
+  return newPosts;
+}
+
 
 
 app.post('/signin', urlencodedParser, parseData, function(req, res) {
@@ -273,6 +331,7 @@ app.get('/checksignin', urlencodedParser, function(req, res) {
     res.send(session !== null);
   })
 });
+
 
 app.post('/authorization', urlencodedParser, parseData, checkSignin, function(req, res) {
   const data = req.app.locals.data;
@@ -395,26 +454,6 @@ app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, che
   })
 });
 
-function checkIfUserOwnsPost(req, res, next) {
-  const data = req.app.locals.data;
-
-  if (data[0] === 'new') {
-    next();
-  } else {
-    Post.findOne({id: data[1]})
-    .then(post => {
-      if (post !== null) {
-        if (post.userId === req.session.userId) {
-          next();
-        } else {
-          res.send({status: 'error'});
-        }
-      } else {
-        res.send({status: 'error'});
-      }
-    })
-  }
-}
 
 app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwnsPost, function(req, res) {
   const data = req.app.locals.data;
@@ -426,7 +465,8 @@ app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwn
       title: data[2],
       description: data[3],
       deadline: data[4],
-      subjects: data[5]
+      subjects: data[5],
+      status: 'pending'
     });
     newPost.save();
 
@@ -545,41 +585,6 @@ app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwn
   }
 });
 
-function generatePosts(posts, pageNumber) {
-  const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
-  const start = pageNumber * postsPerPage;
-  const postsAmount = posts.length - 1;
-  const fEnd = start + postsPerPage - 1;
-  const end = fEnd > postsAmount ? postsAmount : fEnd;
-
-  let newPosts = [];
-
-  for (let i = start; i <= end; i++) {
-    const currentPost = posts[i];
-    const promise = new Promise((resolve, reject) => {
-      if (currentPost !== undefined) {
-        User.findOne({id: currentPost.userId})
-        .then(usr => {
-          let post = JSON.parse(JSON.stringify(currentPost));
-    
-          post.userName = usr.name;
-          post.userSurname = usr.surname;
-          post.userGrade = usr.grade;
-          post.userPfp = usr.pfp;
-    
-          resolve(post);
-        })
-      } else {
-        reject();
-      }
-    })
-
-    newPosts.push(promise);
-  }
-
-  return newPosts;
-}
-
 app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, res) {
   const data = req.app.locals.data;
   const reqSource = data[0];
@@ -587,7 +592,12 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
   const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
 
   if (reqSource === 'workpage_list') {
-    Post.find({})
+    let query = {};
+    if (data[2] !== null && data[2] !== '') {
+      query = {$text: {$search: data[2]}};
+    }
+
+    Post.find(query)
     .then(posts => {
       Promise.all(generatePosts(posts, pageNumber))
       .then(newPosts => {
@@ -609,11 +619,15 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
   if (reqSource === 'editpost_page') {
     Post.findOne({ id: data[1] })
     .then(post => {
-      if (post.userId === req.session.userId) {
-        res.send({
-          status: 'ok',
-          post: post
-        })
+      if (post !== null) {
+        if (post.userId === req.session.userId) {
+          res.send({
+            status: 'ok',
+            post: post
+          })
+        } else {
+          res.send({status: 'error'});
+        }
       } else {
         res.send({status: 'error'});
       }
@@ -621,19 +635,51 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
   }
 
   if (reqSource === 'viewpost_page') {
-    Post.findOne({ id: data[1] })
-    .then(post => {
-      User.findOne({id: post.userId})
-      .then(user => {
-        res.send({
-          status: 'ok',
-          post: post,
-          userName: user.name,
-          userSurname: user.surname,
-          userGrade: user.grade,
-          userPfp: user.pfp
+    User.findOne({id: req.session.userId})
+    .then(user => {
+      if (user !== null) {
+        Post.findOne({id: data[1]})
+        .then(post => {
+          if (post !== null) {
+            User.findOne({id: post.userId})
+            .then(postOwner => {
+              if (postOwner !== null) {
+                let responseStatus;
+                const postsUserRespondedTo = user.postsUserRespondedTo;
+                for (let i = 0; i < postsUserRespondedTo.length; i++) {
+                  if (postsUserRespondedTo[i].postId === post.id) {
+                    responseStatus = postsUserRespondedTo[i].status;
+                    break;
+                  }
+                }
+
+                let postOwnerPhone = '';
+
+                if (responseStatus === 'accepted') {
+                  postOwnerPhone = postOwner.phone;
+                }
+
+                res.send({
+                  status: 'ok',
+                  post: post,
+                  userName: postOwner.name,
+                  userSurname: postOwner.surname,
+                  userGrade: postOwner.grade,
+                  userPfp: postOwner.pfp,
+                  userPhone: postOwnerPhone,
+                  responseStatus: responseStatus
+                })
+              } else {
+                res.send({status: 'error'});
+              }
+            })
+          } else {
+            res.send({status: 'error'});
+          }
         })
-      })
+      } else {
+        res.send({status: 'error'});
+      }
     })
   }
 });
@@ -712,16 +758,21 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res
       .then(post => {
         if (post !== null) {
           let temp = postOwner.usersRespondedToUser;
+          let indexToShift;
           let usersToUpdate = [];
 
           for (let i = temp.length - 1; i >= 0; i--) {
             if (temp[i].postId === post.id && temp[i].userId === data[2]) {
               temp[i].status = 'accepted';
-            } else if (temp[i].postId === post.id && temp[i].userId !== data[2]) {
               usersToUpdate.push(temp[i].userId);
-              temp.splice(i, 1);
+              indexToShift = i;
+            } else if (temp[i].postId === post.id && temp[i].userId !== data[2]) {
+              temp[i].status = 'declined';
+              usersToUpdate.push(temp[i].userId);
             }
           }
+
+          temp.unshift(temp.splice(indexToShift, 1)[0]);
 
           udpateUser(postOwner.id, {
             usersRespondedToUser: temp
@@ -748,6 +799,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res
                       }
 
 
+
                       udpateUser(user.id, {
                         postsUserRespondedTo: temp
                       }).then(result1 => {
@@ -763,6 +815,10 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res
                   })
                 }))
               }
+
+              updates.push(Post.updateOne({id: post.id}, {$set: {
+                status: 'in_progress'
+              }}))
 
               Promise.all(updates)
               .then(() => {
@@ -783,6 +839,144 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res
     })
   }
 
+  if (data[0] === 'decline') {
+    User.findOne({id: req.session.userId})
+    .then(postOwner => {
+      Post.findOne({id: data[1]})
+      .then(post => {
+        if (post !== null) {
+          let temp = postOwner.usersRespondedToUser;
+          let indexToShift;
+          let userToUpdate;
+
+          for (let i = temp.length - 1; i >= 0; i--) {
+            if (temp[i].postId === post.id && temp[i].userId === data[2]) {
+              temp[i].status = 'declined';
+              userToUpdate = temp[i].userId;
+              indexToShift = i;
+              break;
+            }
+          }
+
+          temp.push(temp.splice(indexToShift, 1)[0]);
+
+          udpateUser(postOwner.id, {
+            usersRespondedToUser: temp
+          }).then(result => {
+            if (result === 'success') {
+              User.findOne({id: userToUpdate})
+              .then(user => {
+                if (user !== null) {
+                  let temp = user.postsUserRespondedTo;
+
+                  for (let i = 0; i < temp.length; i++) {
+                    if (temp[i].postId === post.id) {
+                      temp[i].status = 'declined';
+                      break;
+                    }
+                  }
+
+                  udpateUser(user.id, {
+                    postsUserRespondedTo: temp
+                  }).then(result1 => {
+                    if (result1 === 'success') {
+                      res.send({ status: 'ok' });
+                    } else {
+                      res.send({ status: 'error' });
+                    }
+                  })
+                } else {
+                  res.send({ status: 'error' });
+                }
+              })
+
+            } else {
+              res.send({ status: 'error' });
+            }
+          })
+
+        } else {
+          res.send({ status: 'error' });
+        }
+      })
+    })
+  }
+
+  if (data[0] === 'cancel') {
+    User.findOne({id: req.session.userId})
+    .then(postOwner => {
+      Post.findOne({id: data[1]})
+      .then(post => {
+        if (post !== null) {
+          let temp = postOwner.usersRespondedToUser;
+          let usersToUpdate = [];
+
+          for (let i = temp.length - 1; i >= 0; i--) {
+            if (temp[i].postId === post.id) {
+              temp[i].status = 'pending';
+              usersToUpdate.push(temp[i].userId);
+            }
+          }
+
+          udpateUser(postOwner.id, {
+            usersRespondedToUser: temp
+          }).then(result => {
+            if (result === 'success') {
+              let updates = [];
+
+              for (let i = 0; i < usersToUpdate.length; i++) {
+                updates.push(new Promise((resolve, reject) => {
+                  User.findOne({id: usersToUpdate[i]})
+                  .then(user => {
+                    if (user !== null) {
+                      let temp = user.postsUserRespondedTo;
+
+                      for (let i = 0; i < temp.length; i++) {
+                        if (temp[i].postId === post.id) {
+                          temp[i].status = 'pending';
+                          break;
+                        }
+                      }
+
+
+                      udpateUser(user.id, {
+                        postsUserRespondedTo: temp
+                      }).then(result1 => {
+                        if (result1 === 'success') {
+                          resolve();
+                        } else {
+                          reject('error');
+                        }
+                      })
+                    } else {
+                      reject('usr_not_found');
+                    }
+                  })
+                }))
+              }
+
+              updates.push(Post.updateOne({id: post.id}, {$set: {
+                status: 'pending'
+              }}))
+
+              Promise.all(updates)
+              .then(() => {
+                res.send({ status: 'ok' });
+              }).catch(error => {
+                res.send({ status: 'error' });
+              })
+
+            } else {
+              res.send({ status: 'error' });
+            }
+          })
+
+        } else {
+          res.send({ status: 'error' });
+        }
+      })
+    })
+  }
 
 });
 
@@ -846,7 +1040,8 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, functi
                 userName: user.name,
                 userSurname: user.surname,
                 userGrade: user.grade,
-                userPfp: user.pfp
+                userPfp: user.pfp,
+                status: e.status
               })
             })
           })
