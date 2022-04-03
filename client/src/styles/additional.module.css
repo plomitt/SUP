@@ -20,7 +20,7 @@
   aspect-ratio: 1;
 }
 
-.userprefpage_menubar_pfpdesktop {
+.userprefpage_menubar_pfpdesktop, .view_user_pfp {
   border: solid white 3px;
   border-radius: 50%;
   padding: 3px;
@@ -55,7 +55,7 @@
   cursor: pointer;
 }
 
-.work_page_post_pfp {
+.work_page_post_pfp, .users_page_post_pfp {
   border: solid white 2px;
   border-radius: 50%;
   padding: 1px;
@@ -64,6 +64,11 @@
   margin: 0;
   margin-right: 10px;
   aspect-ratio: 1;
+}
+
+.users_page_post_pfp {
+  max-width: 48px;
+  max-height: 48px;
 }
 
 

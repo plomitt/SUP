@@ -20,9 +20,10 @@ const languages = {
         signup: 'SUP | Signup',
         userpreferences: 'SUP | Preferences',
         landing: 'SUP',
-        work: 'SUP | Work',
+        work: 'SUP | Posts',
         editpost: 'SUP | New post',
-        viewpost: 'SUP | View post'
+        viewpost: 'SUP | View post',
+        users: 'SUP | Tutors'
       },
       menu: {
         signin_btn: 'Sign in',
@@ -31,8 +32,8 @@ const languages = {
         cancel_btn: 'Cancel',
         signout_title: 'Sign out?',
         link_user_pref_page: 'Preferences',
-        work: 'Find work',
-        talent: 'Find talent',
+        work: 'Posts',
+        talent: 'Tutors',
         myjobs: 'My Jobs',
         publish_btn: 'Submit',
         back_btn: 'Back',
@@ -158,6 +159,7 @@ const languages = {
       subjects: 'Subjects',
       delete_btn: 'Delete',
       delete_title: 'Delete post?',
+      post_archived: 'The post is archived - unable to make changes',
       errors: {
         title: {
           too_short: 'Title should be at least 5 characters long',
@@ -197,7 +199,7 @@ const languages = {
       respond_title: 'Respond?',
       responded_text: 'Responded to the post successfully',
       already_responded_text: 'Already responded to this post',
-      responses: 'Responses:',
+      responses: 'Responses',
       no_responses: 'No responses yet',
       accept: 'Accept',
       decline: 'Decline',
@@ -213,7 +215,11 @@ const languages = {
         pending: 'Pending'
       },
       yes: 'Yes',
-      in_progress: 'In progress'
+      in_progress: 'In progress',
+      complete_post_btn: 'Complete',
+      completed_btn: 'Completed',
+      completed_text: 'Post completed successfully',
+      complete_title: 'Complete post?'
     },
     user_preferences_page: {
       success: 'Success',
@@ -235,8 +241,7 @@ const languages = {
         title: 'Account is: ',
         verified: 'Verified',
         not_verified: 'Not verified',
-        btn: 'Send verifification email',
-        email_sent: 'Verification email was sent to your inbox'
+        text: 'Moderators will check your account soon'
       },
       email: {
         title: 'Email: ',
@@ -288,7 +293,8 @@ const languages = {
         title: 'Grade: ',
         grade: 'Grade',
         change_btn: 'Change grade',
-        changed_success: 'Grade updated successfully'
+        changed_success: 'Grade updated successfully',
+        teacher: 'Teacher'
       },
       subjects: {
         change_btn: 'Change subjects',
@@ -317,7 +323,7 @@ const languages = {
       signout_btn: 'Sign out',
       link_user_pref_page: 'Preferences',
       no_posts_found: 'No posts found',
-      reported_text: 'Post was reported',
+      reported_text: 'Reported successfully',
       post: {
         subjects: 'Subjects: ',
         deadline: 'Deadline: ',
@@ -326,6 +332,19 @@ const languages = {
         report: 'Report'
       },
       search_txt: 'Search...'
+    },
+    users_page: {
+      subjectsCanHelp: 'Can help: ',
+      subjectsNeedHelp: 'Needs help: '
+    },
+    view_user_page: {
+      subjectsCanHelp: 'Can help',
+      subjectsNeedHelp: 'Needs help',
+      hire_btn: 'Hire',
+      list_label: {
+        usrToLgd: 'Responses to you',
+        lgdToUsr: 'Your responses'
+      }
     }
   },
   ru: {
@@ -346,7 +365,8 @@ const languages = {
         signup: 'SUP | Регистрация',
         userpreferences: 'SUP | Настройки',
         landing: 'SUP',
-        work: 'SUP | Работа',
+        work: 'SUP | Посты',
+        users: 'SUP | Тьюторы'
       },
       menu: {
         signin_btn: 'Войти',
@@ -355,12 +375,12 @@ const languages = {
         cancel_btn: 'Отмена',
         signout_title: 'Выйти?',
         link_user_pref_page: 'Настройки',
-        work: 'Найти работу',
-        talent: 'Найти исполнителя',
+        work: 'Посты',
+        talent: 'Тьюторы',
         myjobs: 'Мои работы',
         publish_btn: 'Опубликовать',
         back_btn: 'Назад',
-        edit_btn: 'Изменить',
+        edit_btn: 'Править',
         report_btn: 'Жалоба',
         delete_btn: 'Удалить',
         refresh_btn: 'Обновить'
@@ -482,6 +502,7 @@ const languages = {
       subjects: 'Предметы',
       delete_btn: 'Удалить',
       delete_title: 'Удалить пост?',
+      post_archived: 'Пост заархивирован - внесение изменений невозможно',
       errors: {
         title: {
           too_short: 'Заголовок должен быть длиннее 5 символов',
@@ -521,7 +542,7 @@ const languages = {
       respond_title: 'Ответить?',
       responded_text: 'Ответ на пост успешен',
       already_responded_text: 'Ответ на этот пост уже был отправлен',
-      responses: 'Ответы:',
+      responses: 'Ответы',
       no_responses: 'Ответов ещё нет',
       accept: 'Принять',
       decline: 'Отклонить',
@@ -537,7 +558,11 @@ const languages = {
         pending: 'В ожидании'
       },
       yes: 'Да',
-      in_progress: 'Выполняется'
+      in_progress: 'Выполняется',
+      complete_post_btn: 'Завершить',
+      completed_btn: 'Завершён',
+      completed_text: 'Пост успешно завершён',
+      complete_title: 'Завершить пост?'
     },
     user_preferences_page: {
       success: 'Успех',
@@ -559,8 +584,7 @@ const languages = {
         title: 'Аккаунт: ',
         verified: 'Подтверждён',
         not_verified: 'Не подтверждён',
-        btn: 'Отправить письмо с подтверждением',
-        email_sent: 'Письмо с подтверждением отправлено на ваш почтовый ящик'
+        text: 'Модераторы скоро проверят ваш аккаунт',
       },
       email: {
         title: 'Email: ',
@@ -612,7 +636,8 @@ const languages = {
         title: 'Класс: ',
         grade: 'Класс',
         change_btn: 'Сменить класс',
-        changed_success: 'Класс успешно обновлён'
+        changed_success: 'Класс успешно обновлён',
+        teacher: 'Учитель'
       },
       subjects: {
         change_btn: 'Сменить предметы',
@@ -645,11 +670,24 @@ const languages = {
       post: {
         subjects: 'Предметы: ',
         deadline: 'Дэдлайн: ',
-        edit: 'Изменить',
+        edit: 'Править',
         delete: 'Удалить',
         report: 'Жалоба'
       },
       search_txt: 'Поиск...'
+    },
+    users_page: {
+      subjectsCanHelp: 'Может помочь: ',
+      subjectsNeedHelp: 'Нужна помощь: '
+    },
+    view_user_page: {
+      subjectsCanHelp: 'Может помочь',
+      subjectsNeedHelp: 'Нужна помощь',
+      hire_btn: 'Нанять',
+      list_label: {
+        usrToLgd: 'Ответы вам',
+        lgdToUsr: 'Ваши ответы'
+      }
     }
   }
 }

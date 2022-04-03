@@ -186,17 +186,21 @@ class PostPage extends React.Component {
       sendRequest('/getposts', 'POST', {data: JSON.stringify(['editpost_page', postId])})
       .then(response => {
         if (response.status === 'ok') {
-          this.setState({
-            initTitle: response.post.title,
-            initDescription: response.post.description,
-            initDeadline: response.post.deadline,
-            subjects: response.post.subjects,
-            postType: 'update',
-            postId: postId
-          });
-          this.resize();
-
-          document.title = 'SUP | ' + response.post.title;
+          if (response.post.status === 'completed') {
+            this.setMessage(languages[this.props.language].edit_post_page.post_archived, 'text', languages[this.props.language].general.access_denied, 'failure', () => {this.props.history.back()});
+          } else {
+            this.setState({
+              initTitle: response.post.title,
+              initDescription: response.post.description,
+              initDeadline: response.post.deadline,
+              subjects: response.post.subjects,
+              postType: 'update',
+              postId: postId
+            });
+            this.resize();
+  
+            document.title = 'SUP | ' + response.post.title;
+          }
         }
 
         if (response.status === 'error') {

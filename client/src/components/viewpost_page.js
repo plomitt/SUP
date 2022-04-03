@@ -116,6 +116,29 @@ const GreenButton = styled.button`
   background-color: ${props => props.theme.primaryColor};
 `
 
+const GreenButton1 = styled.button`
+  display: inline-block;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${props => props.theme.borderColor};
+
+  font-size: 14pt;
+
+  height: 48px;
+
+  padding-left: 17px;
+  padding-right: 17px;
+
+  color: ${props => props.theme.textColor};
+  background-color: ${props => props.theme.greenColor};
+
+  &:hover {
+    cursor: pointer;
+    background-color: ${props => props.theme.darkerGreenColor};
+  }
+`
+
 const RedButton = styled.button`
   display: inline-block;
   border-style: solid;
@@ -191,6 +214,7 @@ class Responses extends React.Component {
       if (response.status === 'ok') {
         this.props.setMessage(languages[this.props.language].view_post_page.accepted_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
         this.fetchResponses();
+        this.props.fetchPost();
       }
 
       if (response.status === 'error') {
@@ -205,6 +229,7 @@ class Responses extends React.Component {
       if (response.status === 'ok') {
         this.props.setMessage(languages[this.props.language].view_post_page.declined_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
         this.fetchResponses();
+        this.props.fetchPost();
       }
 
       if (response.status === 'error') {
@@ -219,6 +244,7 @@ class Responses extends React.Component {
       if (response.status === 'ok') {
         this.props.setMessage(languages[this.props.language].view_post_page.cancelled_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
         this.fetchResponses();
+        this.props.fetchPost();
       }
 
       if (response.status === 'error') {
@@ -307,6 +333,20 @@ class Responses extends React.Component {
           ]
         }
 
+        let dropdownContainer;
+        let dots;
+        if (this.props.postStatus !== 'completed') {
+          dropdownContainer = (
+            <StyledDropdown id={'dropdown' + i} className={style.post_dropdown_container} onMouseLeave={() => { this.setDropdown(i, 'none'); }}>
+              <StyledDropdownList>
+                {dropdown}
+              </StyledDropdownList>
+            </StyledDropdown>
+          );
+
+          dots = (<img src={this.props.theme.dots} alt={':'} id={'dots' + i} className={style['dots']} onClick={() => { this.setDropdown(i, 'block'); }} onMouseOver={() => { this.setDropdown(i, 'block'); }} onMouseLeave={() => { this.setDropdown(i, 'none'); }}/>);
+        }
+
         newResponses.push(
           <li className={style.responses_list_li}>
             <div className={style['post_name_container']}>
@@ -318,13 +358,9 @@ class Responses extends React.Component {
                 </div>
               </div>
               {responseStatus}
-              <img src={this.props.theme.dots} alt={':'} id={'dots' + i} className={style['dots']} onClick={() => { this.setDropdown(i, 'block'); }} onMouseOver={() => { this.setDropdown(i, 'block'); }} onMouseLeave={() => { this.setDropdown(i, 'none'); }}/>
+              {dots}
             </div>
-            <StyledDropdown id={'dropdown' + i} className={style.post_dropdown_container} onMouseLeave={() => { this.setDropdown(i, 'none'); }}>
-              <StyledDropdownList>
-                {dropdown}
-              </StyledDropdownList>
-            </StyledDropdown>
+            {dropdownContainer}
           </li>
         )
       }
@@ -332,14 +368,21 @@ class Responses extends React.Component {
       toShow = newResponses;
     }
 
+    let refreshBtn;
+    if (this.props.postStatus !== 'completed') {
+      refreshBtn = (
+        <div className={style.refresh} onClick={() => { this.fetchResponses(); }}>
+          <img src={this.props.theme.refresh_icon} alt={'r'}></img>
+          <p>{languages[this.props.language].general.menu.refresh_btn}</p>
+        </div>
+      )
+    }
+
     return (
       <div className={style.responses_container}>
         <div className={style.responses_title}>
           <StyledLabel>{languages[this.props.language].view_post_page.responses}</StyledLabel>
-          <div className={style.refresh} onClick={() => { this.fetchResponses(); }}>
-            <img src={this.props.theme.refresh_icon} alt={'r'}></img>
-            <p>{languages[this.props.language].general.menu.refresh_btn}</p>
-          </div>
+          {refreshBtn}
         </div>
         <ul className={style.responses_list}>
           {toShow}
@@ -352,11 +395,14 @@ class Responses extends React.Component {
 class PostPage extends React.Component {
   constructor(props) {
     super(props);
+    this.fetchPost = this.fetchPost.bind(this);
     this.setMessage = this.setMessage.bind(this);
     this.handleReport = this.handleReport.bind(this);
     this.confirmReport = this.confirmReport.bind(this);
     this.handleRespond = this.handleRespond.bind(this);
     this.confirmRespond = this.confirmRespond.bind(this);
+    this.handleComplete = this.handleComplete.bind(this);
+    this.confirmComplete = this.confirmComplete.bind(this);
     this.windowSizeChanged = this.windowSizeChanged.bind(this);
 
     this.state = {
@@ -373,38 +419,11 @@ class PostPage extends React.Component {
       title: '',
       description: '',
       deadline: '',
-      postId: '',
+      postId: getUrlParam('id'),
       responseStatus: ''
     }
 
-    const postId = getUrlParam('id');
-
-    if (postId !== null) {
-      sendRequest('/getposts', 'POST', {data: JSON.stringify(['viewpost_page', postId])})
-      .then(response => {
-        if (response.status === 'ok') {
-          this.setState({
-            title: response.post.title,
-            description: response.post.description,
-            deadline: response.post.deadline,
-            subjects: response.post.subjects,
-            postId: response.post.id,
-            postStatus: response.post.status,
-            userId: response.post.userId,
-            userName: response.userName,
-            userSurname: response.userSurname,
-            userGrade: response.userGrade,
-            userPfp: response.userPfp,
-            userPhone: stringifyPhone(response.userPhone),
-            responseStatus: response.responseStatus
-          });
-
-          document.title = 'SUP | ' + response.post.title;
-        } else {
-          this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure', () => {this.props.history.push('/work')});
-        }
-      })
-    }
+    this.fetchPost();
   }
 
   componentDidMount() {
@@ -443,6 +462,35 @@ class PostPage extends React.Component {
     })
   }
 
+  fetchPost() {
+    if (this.state.postId !== null) {
+      sendRequest('/getposts', 'POST', {data: JSON.stringify(['viewpost_page', this.state.postId])})
+      .then(response => {
+        if (response.status === 'ok') {
+          this.setState({
+            title: response.post.title,
+            description: response.post.description,
+            deadline: response.post.deadline,
+            subjects: response.post.subjects,
+            postId: response.post.id,
+            postStatus: response.post.status,
+            userId: response.post.userId,
+            userName: response.userName,
+            userSurname: response.userSurname,
+            userGrade: response.userGrade,
+            userPfp: response.userPfp,
+            userPhone: stringifyPhone(response.userPhone),
+            responseStatus: response.responseStatus
+          });
+
+          document.title = 'SUP | ' + response.post.title;
+        } else {
+          this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure', () => {this.props.history.push('/work')});
+        }
+      })
+    }
+  }
+
   handleReport() {
     this.setState({
       showLoadingCircle: true
@@ -473,6 +521,41 @@ class PostPage extends React.Component {
     )
   
     this.setMessage(body, 'other', languages[this.props.language].view_post_page.report_title, 'normal', true);
+  }
+
+  handleComplete() {
+    this.setState({
+      showLoadingCircle: true
+    })
+
+    sendRequest('/handlepost', 'POST', {data: JSON.stringify(['complete', this.state.postId, ])})
+    .then(response => {
+      if (response.status === 'ok') {
+        this.setState({
+          showLoadingCircle: false,
+          postStatus: 'completed'
+        })
+        this.setMessage(languages[this.props.language].view_post_page.completed_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
+      }
+
+      if (response.status === 'error') {
+        this.setState({
+          showLoadingCircle: false
+        })
+        this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+      }
+    })
+  }
+
+  confirmComplete() {
+    const body = (
+      <div className={style.dialog_btn_container}>
+        <Button onClick={() => { this.setMessage(false, false, false, false, false); }}>{languages[this.props.language].general.menu.cancel_btn}</Button>
+        <GreenButton1 className={style.dialog_confirm} onClick={() => { this.setMessage(false, false, false, false, false, () => {}); this.handleComplete(); }}>{languages[this.props.language].view_post_page.complete_post_btn}</GreenButton1>
+      </div>
+    )
+  
+    this.setMessage(body, 'other', languages[this.props.language].view_post_page.complete_title, 'normal', true);
   }
 
   handleRespond() {
@@ -559,41 +642,71 @@ class PostPage extends React.Component {
 
     let buttons;
     if (getUserData('id') === this.state.userId) {
-      buttons = (
-        <div className={style.emailBtnsContainer}>
-          <Button id='cancelbtn' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
-          <Button id='nextbtn' className={style.next_btn} onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
-        </div>
-      )
+      if (this.state.postStatus === 'in_progress') {
+        buttons = (
+          <div className={style.btns_container1}>
+            <div className={style.emailBtnsContainer}>
+              <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+              <Button id='edit' className={style.next_btn} onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
+            </div>
+            <GreenButton1 id='complete' className={style.delete_btn} onClick={() => { this.confirmComplete(); }}>{languages[this.props.language].view_post_page.complete_post_btn}</GreenButton1>
+          </div>
+        )
+      } else if (this.state.postStatus === 'completed') {
+        buttons = (
+          <div className={style.emailBtnsContainer}>
+            <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+            <GreenButton id='completed' className={style.next_btn}>{languages[this.props.language].view_post_page.completed_btn}</GreenButton>
+          </div>
+        )
+      } else {
+        buttons = (
+          <div className={style.emailBtnsContainer}>
+            <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+            <Button id='edit' className={style.next_btn} onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
+          </div>
+        )
+      }
     } else {
       let respondBtn;
       if (this.state.responded === true) {
         respondBtn = (
-          <DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>
+          <DisabledButton id='responded' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>
         );
       } else {
         if (this.state.responseStatus === 'pending') {
-          respondBtn = (<DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>)
+          respondBtn = (<DisabledButton id='responded' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>)
         } else if (this.state.responseStatus === 'accepted') {
-          respondBtn = (<GreenButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.accepted}</GreenButton>)
+          if (this.state.postStatus === 'completed') {
+            respondBtn = (<GreenButton id='completed' className={style.next_btn}>{languages[this.props.language].view_post_page.completed_btn}</GreenButton>)
+          } else {
+            respondBtn = (<GreenButton id='accepted' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.accepted}</GreenButton>)
+          }
         } else if (this.state.responseStatus === 'declined') {
-          respondBtn = (<RedButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.declined}</RedButton>)
+          respondBtn = (<RedButton id='declined' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.declined}</RedButton>)
         } else {
           if (this.state.postStatus === 'in_progress') {
-            respondBtn = (<DisabledButton id='nextbtn' className={style.next_btn}>{languages[this.props.language].view_post_page.in_progress}</DisabledButton>)
+            respondBtn = (<DisabledButton id='in_progress' className={style.next_btn}>{languages[this.props.language].view_post_page.in_progress}</DisabledButton>)
+          } else if (this.state.postStatus === 'completed') {
+            respondBtn = (<DisabledButton id='completed' className={style.next_btn}>{languages[this.props.language].view_post_page.completed_btn}</DisabledButton>)
           } else {
-            respondBtn = (<Button id='nextbtn' className={style.next_btn} onClick={() => { this.confirmRespond(); }}>{languages[this.props.language].view_post_page.respond_btn}</Button>)
+            respondBtn = (<Button id='respond' className={style.next_btn} onClick={() => { this.confirmRespond(); }}>{languages[this.props.language].view_post_page.respond_btn}</Button>)
           }
         }
+      }
+
+      let reportBtn;
+      if (this.state.postStatus !== 'completed' && this.state.responseStatus !== 'accepted' && this.state.responseStatus !== 'pending' && this.state.responseStatus !== 'declined') {
+        reportBtn = (<DangerButton id='report' className={style.delete_btn} onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>);
       }
 
       buttons = (
         <div className={style.btns_container1}>
           <div className={style.emailBtnsContainer}>
-            <Button id='cancelbtn' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+            <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
             {respondBtn}
           </div>
-          <DangerButton id='deletebtn' className={style.delete_btn} onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>
+          {reportBtn}
         </div>
       )
     }
@@ -627,17 +740,17 @@ class PostPage extends React.Component {
     
     let responsesList;
     if (this.state.userId === getUserData('id')) {
-      responsesList = (
-        <Responses postId={this.state.postId} language={this.props.language} history={this.props.history} theme={this.props.theme} setMessage={this.setMessage}/>
-        )
-      }
-      
-      let loadingCircle;
-      if (this.state.showLoadingCircle === true) {
-        loadingCircle = (
-          <LoadingCircle theme={this.props.theme} />
-        )
-      }
+    responsesList = (
+      <Responses fetchPost={this.fetchPost} postStatus={this.state.postStatus} postId={this.state.postId} language={this.props.language} history={this.props.history} theme={this.props.theme} setMessage={this.setMessage}/>
+      )
+    }
+    
+    let loadingCircle;
+    if (this.state.showLoadingCircle === true) {
+      loadingCircle = (
+        <LoadingCircle theme={this.props.theme} />
+      )
+    }
 
     return (
       <div>
@@ -665,8 +778,8 @@ class PostPage extends React.Component {
               {phoneNumberField}
               {loadingCircle}
               {buttons}
+              {responsesList}
             </div>
-            {responsesList}
           </div>
           <Footer />
         </div>

@@ -120,20 +120,20 @@ const SearchInput = styled.input`
 `
 
 const StyledSearchbar = styled.div`
+  display: flex;
+  flex-flow: row;
+
   margin: auto;
   border-style: solid;
   border-radius: 10px;
   border-width: 1px;
   border-color: ${props => props.theme.borderColor};
   
-  margin-top: 10px;
-  margin-left: 20px;
-  margin-right: 20px;
   margin-bottom: 20px;
 
   width: -webkit-fill-available;
   max-width: 2864px;
-  min-width: 290px;
+  min-width: 289px;
   height: 56px;
 
   font-size: 15pt;
@@ -149,6 +149,40 @@ const StyledSearchbar = styled.div`
     border-color: transparent;
   }
 `
+
+const SearchbarButtonContainer = styled.div`
+  border-radius: 10px;
+  border: solid 1px ${props => props.theme.borderColor};
+
+  border-radius: 10px;
+  border: 1px solid rgb(255, 255, 255);
+  display: flex;
+  justify-content: center;
+  min-width: 299px;
+
+  margin-top: -10px;
+`
+
+const SelectedSubject = styled.li`
+  color: ${props => props.theme.accentColor};
+  margin: 0px;
+
+  &:hover {
+    cursor: pointer;
+    color: ${props => props.theme.darkerAccentColor};
+  }
+`
+
+const UnselectedSubject = styled.li`
+  color: ${props => props.theme.textColor};
+  margin: 0px;
+
+  &:hover {
+    cursor: pointer;
+    color: ${props => props.theme.darkerAccentColor};
+  }
+`
+
 
 class PostDropdown extends React.Component {
   constructor(props) {
@@ -225,6 +259,7 @@ class PostDropdown extends React.Component {
       showLoadingCircle: true
     })
 
+    
     sendRequest('/report', 'POST', {data: JSON.stringify(['add', 'post', this.props.post.id])})
     .then(response => {
       if (response.status === 'ok') {
@@ -255,21 +290,28 @@ class PostDropdown extends React.Component {
   
     let toShow = [];
     if (userId === this.props.post.userId) {
-      toShow = [
-        <li onClick={() => this.props.history.push(postPath)}><p>{languages[this.props.language].work_page.post.edit}</p></li>,
-        <li onClick={() => this.confirmPostDelete()}><DangerP>{languages[this.props.language].work_page.post.delete}</DangerP></li>
-      ];
+      if (this.props.post.status === 'completed') {
+        toShow = [
+          <DisabledLi><p>{languages[this.props.language].view_post_page.completed_btn}</p></DisabledLi>
+        ];
+      } else {
+        toShow = [
+          <li onClick={() => this.props.history.push(postPath)}><p>{languages[this.props.language].work_page.post.edit}</p></li>,
+          <li onClick={() => this.confirmPostDelete()}><DangerP>{languages[this.props.language].work_page.post.delete}</DangerP></li>
+        ];
+      }
     } else {
-      const respondBtn = getUserData('postsUserRespondedTo').some(e => e.postId === this.props.post.id) ? (
-        <DisabledLi><p>{languages[this.props.language].view_post_page.responded_btn}</p></DisabledLi>
-      ) : (
-        <li onClick={() => this.confirmPostRespond()}><p>{languages[this.props.language].view_post_page.respond_btn}</p></li>
-      );
+      if (getUserData('postsUserRespondedTo').some(e => e.postId === this.props.post.id)) {
+        toShow = [
+          <DisabledLi><p>{languages[this.props.language].view_post_page.responded_btn}</p></DisabledLi>
+        ];
+      } else {
+        toShow = [
+          <li onClick={() => this.confirmPostRespond()}><p>{languages[this.props.language].view_post_page.respond_btn}</p></li>,
+          <li onClick={() => this.confirmReport()}><DangerP>{languages[this.props.language].work_page.post.report}</DangerP></li>
+        ];
+      }
 
-      toShow = [
-        respondBtn,
-        <li onClick={() => this.confirmReport()}><DangerP>{languages[this.props.language].work_page.post.report}</DangerP></li>
-      ];
     }
   
     return (
@@ -283,24 +325,26 @@ class PostDropdown extends React.Component {
 }
 
 function setDropdown(eKey, state) {
-  const dropdwon = document.getElementById('dropdown' + eKey);
+  const dropdown = document.getElementById('dropdown' + eKey);
 
   if (state === 'none') {
-    if (!dropdwon.matches(':hover')) {
-      dropdwon.style.display = 'none';
+    if (!dropdown.matches(':hover')) {
+      dropdown.style.display = 'none';
     }
   } else {
-    dropdwon.style.display = state;
+    dropdown.style.display = state;
   }
 }
 
 
 function Post(props) {
-  const subjects = props.post.subjects.map(subject => {
+  let subjects = props.post.subjects.map(subject => {
     return (
       languages[props.language].general.subjects[subject]
     )
-  })
+  }).join(', ');
+  subjects = subjects > 70 ? subjects.slice(0, 71) + '...' : subjects;
+
 
   const postPath = '/viewpost?id=' + props.post.id;
 
@@ -314,7 +358,7 @@ function Post(props) {
         </li>
         <li onClick={() => { props.history.push(postPath); }}>
           <div>
-            <p className={style['post_subjects']}>{languages[props.language].work_page.post.subjects}{subjects.join(', ')}</p>
+            <p className={style['post_subjects']}>{languages[props.language].work_page.post.subjects}{subjects}</p>
           </div>
         </li>
         <li onClick={() => { props.history.push(postPath); }}>
@@ -378,14 +422,95 @@ function Pagination(props) {
   )
 }
 
-function Searchbar(props) {
-  return (
-    <StyledSearchbar className={style.searchbar_container}>
-      <SearchInput id='search_input' placeholder={languages[props.language].work_page.search_txt} onKeyUp={(e) => { if (e.key === 'Enter') { props.refreshPosts(undefined, document.getElementById('search_input').value) } }}></SearchInput>
-      <img className={style.searchbar_refresh} src={props.theme.search_icon} alt={'s'} onClick={() => props.refreshPosts(undefined, document.getElementById('search_input').value) }></img>
-      <img className={style.searchbar_refresh} src={props.theme.refresh_icon} alt={'r'} onClick={() => props.refreshPosts() }></img>
-    </StyledSearchbar>
-  )
+class Searchbar extends React.Component {
+  constructor(props) {
+    super(props);
+    this.addSubject = this.addSubject.bind(this);
+    this.removeSubject = this.removeSubject.bind(this);
+
+    this.state = {
+      selected: []
+    }
+  }
+
+  addSubject(subject) {
+    let subjects = this.state.selected;
+    subjects.push(subject);
+
+    this.setState({
+      selected: subjects
+    })
+  }
+
+  removeSubject(subject) {
+    let subjects = this.state.selected;
+    subjects.splice(subjects.indexOf(subject), 1);
+
+    this.setState({
+      selected: subjects
+    })
+  }
+
+  render () {
+    let subjectFilter;
+    const subjects = languages[this.props.language].general.subjects;
+    const keys = Object.keys(subjects);
+    let options = [];
+    
+    for (let key of keys) {
+      if (this.state.selected.includes(key)) {
+        options.push(<SelectedSubject onClick={() => { this.removeSubject(key); }}>{languages[this.props.language].general.subjects[key]}</SelectedSubject>)
+      } else {
+        options.push(<UnselectedSubject onClick={() => { this.addSubject(key); }}>{languages[this.props.language].general.subjects[key]}</UnselectedSubject>)
+      }
+    }
+
+    let dropdownStyle = window.innerWidth >= 600 ? 'search_dropdown_container' : 'search_dropdown_container_1col';
+
+    const dropdown = (
+      <StyledDropdown id='dropdown_search' className={style[dropdownStyle]} onMouseLeave={() => { setDropdown('_search', 'none'); }}>
+        <StyledDropdownList>
+          {options}
+        </StyledDropdownList>
+      </StyledDropdown>
+    )
+    
+    if (window.innerWidth >= 660) {
+      subjectFilter = (
+        <div>
+          <p className={style.search_dropdown_button} onMouseOver={() => { setDropdown('_search', 'block'); }} onMouseLeave={() => { setDropdown('_search', 'none'); }} onClick={() => { setDropdown('_search', 'block'); }}>{languages[this.props.language].edit_post_page.subjects}</p>
+          {dropdown}
+        </div>
+      )
+
+      return (
+        <StyledSearchbar className={style.searchbar_container}>
+          {subjectFilter}
+          <SearchInput id='search_input' placeholder={languages[this.props.language].work_page.search_txt} onKeyUp={(e) => { if (e.key === 'Enter') { this.props.refreshPosts(undefined, document.getElementById('search_input').value, this.state.selected) } }}></SearchInput>
+          <img className={style.searchbar_refresh} src={this.props.theme.search_icon} alt={'s'} onClick={() => this.props.refreshPosts(undefined, document.getElementById('search_input').value, this.state.selected) }></img>
+          <img className={style.searchbar_refresh} src={this.props.theme.refresh_icon} alt={'r'} onClick={() => this.props.refreshPosts() }></img>
+        </StyledSearchbar>
+      )
+    } else {
+      subjectFilter = (
+        <SearchbarButtonContainer>
+          <p className={style.search_dropdown_button_1col} onMouseOver={() => { setDropdown('_search', 'block'); }} onMouseLeave={() => { setDropdown('_search', 'none'); }} onClick={() => { setDropdown('_search', 'block'); }}>{languages[this.props.language].edit_post_page.subjects}</p>
+          {dropdown}
+        </SearchbarButtonContainer>
+      )
+
+      return (
+        <div className={style.searchbar_container1}>
+          <StyledSearchbar className={style.searchbar_container}>
+            <SearchInput id='search_input' placeholder={languages[this.props.language].work_page.search_txt} onKeyUp={(e) => { if (e.key === 'Enter') { this.props.refreshPosts(undefined, document.getElementById('search_input').value, this.state.selected) } }}></SearchInput>
+            <img className={style.searchbar_refresh} src={this.props.theme.search_icon} alt={'s'} onClick={() => this.props.refreshPosts(undefined, document.getElementById('search_input').value, this.state.selected) }></img>
+            <img className={style.searchbar_refresh} src={this.props.theme.refresh_icon} alt={'r'} onClick={() => this.props.refreshPosts() }></img>
+          </StyledSearchbar>
+          {subjectFilter}
+        </div>
+      )
+    }
+  }
 }
 
 class WorkPage extends React.Component {
@@ -419,14 +544,14 @@ class WorkPage extends React.Component {
     window.removeEventListener('resize', this.windowSizeChanged);
   }
 
-  refreshPosts(pageNumber, filter) {
+  refreshPosts(pageNumber, filter, subjects) {
     this.setState({
       showLoadingCircle: true
     })
 
     const number = pageNumber === undefined ? this.state.pageNumber : pageNumber;
 
-    sendRequest('/getposts', 'POST', {data: JSON.stringify(['workpage_list', number, filter])})
+    sendRequest('/getposts', 'POST', {data: JSON.stringify(['workpage_list', number, filter, subjects])})
     .then(response => {
 
       if (response.status === 'ok') {
@@ -453,13 +578,13 @@ class WorkPage extends React.Component {
 
     if (window.innerWidth >= 1940) {
       cols = 6;
-    } else if (window.innerWidth > 1620 && window.innerWidth < 1940) {
+    } else if (window.innerWidth >= 1620 && window.innerWidth < 1940) {
       cols = 5;
-    } else if (window.innerWidth > 1300 && window.innerWidth < 1620) {
+    } else if (window.innerWidth >= 1300 && window.innerWidth < 1620) {
       cols = 4;
-    } else if (window.innerWidth > 980 && window.innerWidth < 1300) {
+    } else if (window.innerWidth >= 980 && window.innerWidth < 1300) {
       cols = 3;
-    } else if (window.innerWidth > 660 && window.innerWidth < 980) {
+    } else if (window.innerWidth >= 660 && window.innerWidth < 980) {
       cols = 2;
     } else if (window.innerWidth < 660) {
       cols = 1;
@@ -525,7 +650,7 @@ class WorkPage extends React.Component {
         <div id={'page'}>
           <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
           <div id='pageBody' className={style['pageBody']}>
-            <Searchbar theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts}/>
+            <Searchbar menuType={this.state.menuType} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts}/>
             <Posts menuType={this.state.menuType} posts={this.state.posts} history={this.props.history} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts} setMessage={this.setMessage}/>
             {noPostsMsg}
             {loadingCircle}

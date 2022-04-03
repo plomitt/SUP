@@ -20,22 +20,17 @@ db.once('open', function() {
   console.log('Connection to the Database is successful.')
 });
 
-const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole } = require('./additional');
+app.use(cors({origin: 'http://localhost:3000', credentials: true}));
+app.use(bodyParser.json());
 
+const handler = express.static('../client/build');
+const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost', '/users', '/user'];
+routes.forEach( route => app.use(route, handler) );
 
 const sessionStore = new MongoDBStore({
   uri: process.env.DB_URI,
   collection: 'sessions'
 });
-
-app.use(cors({origin: 'http://localhost:3000', credentials: true}));
-app.use(bodyParser.json());
-
-const handler = express.static('../client/build');
-const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost'];
-routes.forEach( route => app.use(route, handler) );
-
-
 
 app.use(session({
   genid: (req) => {
@@ -54,6 +49,11 @@ app.use(session({
     secure: false
   }
 }));
+
+const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole, userHasEmptyFields } = require('./additional');
+const { constants } = require('fs');
+
+
 
 // app.use((req, res, next) => {
 //   console.log(req.session);
@@ -99,19 +99,21 @@ const postSchema = new mongoose.Schema({
 });
 const Post = mongoose.model('Post', postSchema);
 
-async function findUserInDB(id) {
-  return await User.find({});
-}
+
 
 function addUserToDB(email, password, role) {
   try {
-    const newUser = new User({
+    let newUser = new User({
       id: uuidv4(),
       email: email,
       password: password,
       verified: false,
       role: role
     })
+
+    if (role === 'teacher') {
+      newUser.grade = 'teacher';
+    }
 
     newUser.save();
     return true;
@@ -144,7 +146,7 @@ function udpateUser(id, toUpdate) {
     {id: id},
     {$set: toUpdate}
   ).then(res => {
-    if (res.ok === 1) {
+    if (res.modifiedCount === 1) {
       return 'success'
     } else {
       return 'error'
@@ -212,6 +214,27 @@ function checkIfUserOwnsPost(req, res, next) {
   }
 }
 
+function checkIfPostIsntComplete(req, res, next) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'new') {
+    next();
+  } else {
+    Post.findOne({id: data[1]})
+    .then(post => {
+      if (post !== null) {
+        if (post.status === 'complete') {
+          res.send({status: 'error'});
+        } else {
+          next();
+        }
+      } else {
+        res.send({status: 'error'});
+      }
+    })
+  }
+}
+
 function generatePosts(posts, pageNumber) {
   const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
   const start = pageNumber * postsPerPage;
@@ -246,6 +269,8 @@ function generatePosts(posts, pageNumber) {
 
   return newPosts;
 }
+
+
 
 
 
@@ -455,8 +480,21 @@ app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, che
 });
 
 
-app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwnsPost, function(req, res) {
+app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwnsPost, checkIfPostIsntComplete, function(req, res) {
   const data = req.app.locals.data;
+
+  if (data[0] === 'complete') {
+    Post.updateOne(
+      {id: data[1]},
+      {$set: {status: 'completed'}}
+    ).then(result => {
+      if (result.modifiedCount === 1) {
+        res.send({status: 'ok'});
+      } else {
+        res.send({status: 'error'});
+      }
+    })
+  }
 
   if (data[0] === 'new') {
     const newPost = new Post({
@@ -486,7 +524,7 @@ app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwn
         subjects: data[5]
       }}
     ).then(result => {
-      if (result.nModified === 1) {
+      if (result.modifiedCount === 1) {
         res.send({
           status: 'ok',
           type: 'update'
@@ -593,8 +631,19 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
 
   if (reqSource === 'workpage_list') {
     let query = {};
-    if (data[2] !== null && data[2] !== '') {
-      query = {$text: {$search: data[2]}};
+    if (data[2] !== null && data[2] !== '' && data[3] !== null && data[3].length !== 0) {
+      query = {
+        $text: {$search: data[2]},
+        subjects: { $all: data[3] }
+      };
+    } else if (data[2] !== null && data[2] !== '' && (data[3] === null || data[3].length === 0)) {
+      query = {
+        $text: {$search: data[2]}
+      };
+    } else if ((data[2] === null || data[2] === '') && data[3] !== null && data[3].length !== 0) {
+      query = {
+        subjects: { $all: data[3] }
+      };
     }
 
     Post.find(query)
@@ -683,6 +732,35 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
     })
   }
 });
+
+
+function generateResponses(requestUser, user) {
+  let responses = [];
+  requestUser.usersRespondedToUser.forEach(e => {
+    if (e.userId === user.id) {
+      responses.push(e);
+    }
+  })
+
+  const newResponses = responses.map(response => {
+    return new Promise((resolve, reject) => {
+      Post.findOne({id: response.postId})
+      .then(post => {
+        if (post !== null) {
+          resolve({
+            title: post.title,
+            postId: post.id,
+            status: response.status
+          })
+        } else {
+          reject();
+        }
+      })
+    })
+  });
+
+  return newResponses;
+}
 
 app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res) {
   const data = req.app.locals.data;
@@ -980,45 +1058,6 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res
 
 });
 
-app.post('/report', urlencodedParser, parseData, checkSignin, function(req, res) {
-  const data = req.app.locals.data;
-
-  User.findOne({id: req.session.userId})
-  .then(user => {
-    if (data[1] === 'post') {
-      Post.findOne({id: data[2]})
-      .then(post => {
-        if (post !== null) {
-          if (post.userId !== user.id) {
-            if (data[0] === 'add') {
-              const newReport = new Report({
-                id: uuidv4(),
-                userId: req.session.userId,
-                targetType: data[1],
-                targetId: post.id
-              });
-              newReport.save();
-            }
-
-            res.send({
-              status: 'ok'
-            });
-          } else {
-            res.send({
-              status: 'error'
-            });
-          }
-        } else {
-          res.send({
-            status: 'error'
-          });
-        }
-      })
-    }
-  })
-
-});
-
 app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, function(req, res) {
   const data = req.app.locals.data;
 
@@ -1060,8 +1099,206 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, functi
         res.send({ status: 'error' });
       })
     })
+  }
+
+  if (data[0] === 'view_user_page') {
+    User.findOne({id: req.session.userId})
+    .then(requestUser => {
+      User.findOne({id: data[1]})
+      .then(user => {
+        if (user !== null) {
+          Promise.all(generateResponses(requestUser, user))
+          .then(userReponsesToLoggedin => {
+            Promise.all(generateResponses(user, requestUser))
+            .then(loggedinResponsesToUser => {
+              res.send({
+                status: 'ok',
+                userReponsesToLoggedin: userReponsesToLoggedin,
+                loggedinResponsesToUser: loggedinResponsesToUser
+              })
+            }).catch(err => {
+              res.send({status: 'error'})
+            })
+          }).catch(err => {
+            res.send({status: 'error'})
+          })
+        } else {
+          res.send({
+            status: 'error'
+          })
+        }
+      })
+    })
+  }
+});
 
 
+function saveReport(target, type, action, userId) {
+  return new Promise((resolve) => {
+    if (target !== null) {
+      const targetUserId = type === 'post' ? target.userId : target.id;
+      if (targetUserId !== userId) {
+        if (action === 'add') {
+          const newReport = new Report({
+            id: uuidv4(),
+            userId: userId,
+            targetType: type,
+            targetId: target.id
+          });
+          newReport.save();
+        }
+  
+        resolve({
+          status: 'ok'
+        });
+      } else {
+        resolve({
+          status: 'error'
+        });
+      }
+    } else {
+      resolve({
+        status: 'error'
+      });
+    }
+  })
+}
+
+app.post('/report', urlencodedParser, parseData, checkSignin, function(req, res) {
+  const data = req.app.locals.data;
+
+  User.findOne({id: req.session.userId})
+  .then(user => {
+    if (data[1] === 'post') {
+      Post.findOne({id: data[2]})
+      .then(post => {
+        saveReport(post, 'post', data[0], user.id)
+        .then(result => res.send(result));
+      })
+    }
+
+    if (data[1] === 'user') {
+      User.findOne({id: data[2]})
+      .then(user1 => {
+        saveReport(user1, 'user', data[0], user.id)
+        .then(result => res.send(result));
+      })
+    }
+  })
+
+});
+
+
+function generateUsers(users, pageNumber) {
+  const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
+  const start = pageNumber * postsPerPage;
+  const usersAmount = users.length - 1;
+  const fEnd = start + postsPerPage - 1;
+  let end = fEnd > usersAmount ? usersAmount : fEnd;
+
+  let newUsers = [];
+
+  for (let i = start; i <= end; i++) {
+    const currentUser = users[i];
+
+    if (userHasEmptyFields(currentUser) === false && currentUser.verified === true) {
+      const newUser = {
+        id: currentUser.id,
+        pfp: currentUser.pfp,
+        name: currentUser.name,
+        surname: currentUser.surname,
+        grade: currentUser.grade,
+        bio: currentUser.bio,
+        subjectsCanHelp: currentUser.subjectsCanHelp,
+        subjectsNeedHelp: currentUser.subjectsNeedHelp,
+      };
+  
+      newUsers.push(newUser);
+    } else {
+      const newEnd = end + 1;
+      if (newEnd < usersAmount) {
+        end = newEnd;
+      }
+    }
+    
+  }
+
+  return newUsers;
+}
+
+app.post('/getusers', urlencodedParser, parseData, checkSignin, function(req, res) {
+  const data = req.app.locals.data;
+
+  if (data[0] === 'users_page') {
+    const pageNumber = data[1] - 1;
+    const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
+  
+    let query = {
+      verified: true
+    };
+    if (data[2] !== null && data[2] !== '') {
+      query = {
+      verified: true,
+      $text: {$search: data[2]}
+      };
+    }
+  
+    User.find(query)
+    .then(users => {
+      const newUsers = generateUsers(users, pageNumber);
+  
+      if (newUsers !== 'error') {
+        res.send({
+          status: 'ok',
+          users: generateUsers(users, pageNumber),
+          amountOfPages: Math.ceil(users.length/postsPerPage)
+        })
+      } else {
+        res.send({
+          status: 'error',
+          users: [],
+          amountOfPages: 1
+        })
+      }
+    })
+  }
+
+  if (data[0] === 'view_user_page') {
+    User.findOne({id: req.session.userId})
+    .then(requestUser => {
+      User.findOne({id: data[1]})
+      .then(user => {
+        if (user !== null) {
+          let phoneNumber = undefined;
+          const check1 = user.usersRespondedToUser.some(e => e.userId === requestUser.id);
+          const check2 = requestUser.usersRespondedToUser.some(e => e.userId === user.id);
+          if (check1 || check2) {
+            phoneNumber = user.phone;
+          }
+
+          const newUser = {
+            id: user.id,
+            pfp: user.pfp,
+            name: user.name,
+            surname: user.surname,
+            grade: user.grade,
+            bio: user.bio,
+            phone: phoneNumber,
+            subjectsCanHelp: user.subjectsCanHelp,
+            subjectsNeedHelp: user.subjectsNeedHelp
+          }
+          
+          res.send({
+            status: 'ok',
+            user: newUser
+          })
+        } else {
+          res.send({
+            status: 'error'
+          })
+        }
+      })
+    })
   }
 });
 

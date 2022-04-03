@@ -9,6 +9,8 @@ import UserPreferencesPage from './user_pref_page';
 import WorkPage from './work_page';
 import EditPostPage from './editpost_page';
 import ViewPostPage from './viewpost_page';
+import UsersPage from './users_page';
+import ViewUserPage from './view_user_page';
 
 class Root extends React.Component {
   render() {
@@ -49,6 +51,14 @@ class Root extends React.Component {
 
     if (page === 'viewpost') {
       return <ViewPostPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+    }
+
+    if (page === 'users') {
+      return <UsersPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+    }
+
+    if (page === 'user') {
+      return <ViewUserPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
   }
 }

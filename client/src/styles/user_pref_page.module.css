@@ -181,6 +181,10 @@
   color: #ED230D;
 }
 
+.verifification_text {
+  margin: 0;
+}
+
 .email_container {
   width: fit-content;
 }

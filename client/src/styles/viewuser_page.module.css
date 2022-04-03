@@ -4,7 +4,6 @@
 
 .pageBodydesktop {
   margin-top: 80px;
-  margin-bottom: 80px;
   display: grid;
   justify-content: center;
 }
@@ -68,8 +67,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  width: 250px;
 }
 
 .dialog_btn_container p {
@@ -114,8 +111,8 @@
 .responses_list_li {
   list-style-type: none;
 
-  padding-bottom: 20px;
-  padding-top: 20px;
+  padding-bottom: 10px;
+  padding-top: 10px;
 
   display: flex;
   flex-flow: column;
@@ -141,13 +138,12 @@
 }
 
 .response_status_p {
-  margin-right: 0;
+  margin-right: 16px;
   margin-left: auto;
 }
 
 .dots {
   max-width: 24px;
-  margin-left: 16px;
 }
 
 .post_name_container {
@@ -162,13 +158,15 @@
   align-items: center;
 }
 
-.post_name_container1:hover, .dots:hover{
+.post_title:hover, .dots:hover{
   opacity: 0.8;
   cursor: pointer;
-}
+} 
 
-.post_name, .post_grade {
+.user_name, .user_grade {
   margin: 0;
+  margin-left: 10px;
+  font-size: 21pt;
 }
 
 .responses_title {

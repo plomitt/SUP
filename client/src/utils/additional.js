@@ -680,7 +680,7 @@ export function PFP(props) {
   
   let pfp;
   
-  if (props.type === 'work_page_post_pfp') {
+  if (props.type === 'work_page_post_pfp' || props.type === 'users_page_post_pfp' || props.type === 'view_user_pfp') {
     if (props.pfp === 'default' || props.pfp === undefined || props.pfp === '') {
       pfp = placeholder_pfp;
     } else {
@@ -742,15 +742,15 @@ function MenuBarCenterText(props) {
     return (
       <div className={style.flex_box}>
         <StyledSelectedText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledSelectedText>
-        <StyledMenuCenterText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/users')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
         <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
-  } else if (destination === '/talent' || destination === '/talent/') {
+  } else if (destination === '/users' || destination === '/users/') {
     return (
       <div className={style.flex_box}>
         <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
-        <StyledSelectedText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledSelectedText>
+        <StyledSelectedText onClick={() => props.history.push('/users')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledSelectedText>
         <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
@@ -758,7 +758,7 @@ function MenuBarCenterText(props) {
     return (
       <div className={style.flex_box}>
         <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
-        <StyledMenuCenterText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/users')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
         <StyledSelectedText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledSelectedText>
       </div>
     )
@@ -766,7 +766,7 @@ function MenuBarCenterText(props) {
     return (
       <div className={style.flex_box}>
         <StyledMenuCenterText onClick={() => props.history.push('/work')}>{languages[props.language].general.menu.work}</StyledMenuCenterText>
-        <StyledMenuCenterText onClick={() => props.history.push('/talent')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
+        <StyledMenuCenterText onClick={() => props.history.push('/users')} className={style.menu_talent}>{languages[props.language].general.menu.talent}</StyledMenuCenterText>
         <StyledMenuCenterText onClick={() => props.history.push('/myjobs')}>{languages[props.language].general.menu.myjobs}</StyledMenuCenterText>
       </div>
     )
@@ -829,7 +829,7 @@ function MenuBodyMobile(props) {
         <StyledMenuBarMobileUl>
           <li><StyledP onClick={() => { props.history.push('/') }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
           <li><StyledP onClick={() => { props.history.push('/work') }}>{languages[props.language].general.menu.work}</StyledP></li>
-          <li><StyledP onClick={() => { props.history.push('/talent') }}>{languages[props.language].general.menu.talent}</StyledP></li>
+          <li><StyledP onClick={() => { props.history.push('/users') }}>{languages[props.language].general.menu.talent}</StyledP></li>
           <li><StyledP onClick={() => { props.history.push('/myjobs') }}>{languages[props.language].general.menu.myjobs}</StyledP></li>
           <li><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>

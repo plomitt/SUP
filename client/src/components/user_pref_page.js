@@ -112,7 +112,7 @@ function Verifification(props) {
             {languages[props.language].user_preferences_page.verifification['not_verified']}
           </span>
         </p>
-        <SelectedP onClick={() => {props.setMessage(languages[props.language].user_preferences_page.verifification.email_sent, 'text', languages[props.language].user_preferences_page.success, 'success')}} className={style['menu_toggle' + props.menuType]}>{languages[props.language].user_preferences_page.verifification.btn}</SelectedP>
+        <p className={style.verifification_text}>{languages[props.language].user_preferences_page.verifification.text}</p>
       </div>
     )
   }
@@ -1080,12 +1080,18 @@ class GradeMenu extends React.Component {
     }
 
     if (this.state.showMenu === false) {
-      return (
-        <div>
-          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.title}{this.state.grade}{languages[this.props.language].user_preferences_page[this.state.isSpecified]}</p>
-          <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.change_btn}</SelectedP>
-        </div>
-      )
+      if (this.state.grade === 'teacher') {
+        return (
+          <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.title}{languages[this.props.language].user_preferences_page.grade.teacher}</p>
+        )
+      } else {
+        return (
+          <div>
+            <p className={style['title_text' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.title}{this.state.grade}{languages[this.props.language].user_preferences_page[this.state.isSpecified]}</p>
+            <SelectedP onClick={() => this.setState({showMenu: true})} className={style['menu_toggle' + this.props.menuType]}>{languages[this.props.language].user_preferences_page.grade.change_btn}</SelectedP>
+          </div>
+        )
+      }
     } else {
       return (
         <div>

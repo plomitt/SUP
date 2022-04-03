@@ -5,7 +5,7 @@ export function router(href, history) {
   const d2 = d1.match(/(\/(\w+))/g);
 
   const destination = d2 === null ? '' : d2[0].replaceAll('/', '');
-  const pages = ['', 'signin', 'signup', 'authorization', 'userpreferences', 'work', 'editpost', 'viewpost']
+  const pages = ['', 'signin', 'signup', 'authorization', 'userpreferences', 'work', 'editpost', 'viewpost', 'users', 'user']
   const protectedPages = ['userpreferences'];
 
   

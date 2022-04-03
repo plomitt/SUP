@@ -104,4 +104,9 @@ function checkPassword(password) {
   return true;
 }
 
-module.exports = {checkBio, checkEmail, checkGrade, checkName, checkPassword, checkRole}
+function userHasEmptyFields(user) {
+  const fields = ['pfp', 'name', 'surname', 'grade', 'bio', 'phone'];
+  return fields.some(field => user[field] === undefined)
+}
+
+module.exports = {checkBio, checkEmail, checkGrade, checkName, checkPassword, checkRole, userHasEmptyFields}
