@@ -23,7 +23,8 @@ const languages = {
         work: 'SUP | Posts',
         editpost: 'SUP | New post',
         viewpost: 'SUP | View post',
-        users: 'SUP | Tutors'
+        users: 'SUP | Tutors',
+        userjobs: 'SUP | My jobs'
       },
       menu: {
         signin_btn: 'Sign in',
@@ -335,7 +336,8 @@ const languages = {
     },
     users_page: {
       subjectsCanHelp: 'Can help: ',
-      subjectsNeedHelp: 'Needs help: '
+      subjectsNeedHelp: 'Needs help: ',
+      no_users_found: 'No tutors found'
     },
     view_user_page: {
       subjectsCanHelp: 'Can help',
@@ -345,6 +347,17 @@ const languages = {
         usrToLgd: 'Responses to you',
         lgdToUsr: 'Your responses'
       }
+    },
+    user_jobs_page: {
+      userPosts: {
+        label: 'Your posts',
+        no_elements: 'No posts yet'
+      },
+      userResponses: {
+        label: 'Your responses',
+        no_elements: 'No responses yet'
+      },
+      responsesAmountTxt: ' response(s)'
     }
   },
   ru: {
@@ -366,7 +379,8 @@ const languages = {
         userpreferences: 'SUP | Настройки',
         landing: 'SUP',
         work: 'SUP | Посты',
-        users: 'SUP | Тьюторы'
+        users: 'SUP | Тьюторы',
+        userjobs: 'SUP | Мои работы'
       },
       menu: {
         signin_btn: 'Войти',
@@ -678,7 +692,8 @@ const languages = {
     },
     users_page: {
       subjectsCanHelp: 'Может помочь: ',
-      subjectsNeedHelp: 'Нужна помощь: '
+      subjectsNeedHelp: 'Нужна помощь: ',
+      no_users_found: 'Тьюторов не найдено'
     },
     view_user_page: {
       subjectsCanHelp: 'Может помочь',
@@ -688,6 +703,17 @@ const languages = {
         usrToLgd: 'Ответы вам',
         lgdToUsr: 'Ваши ответы'
       }
+    },
+    user_jobs_page: {
+      userPosts: {
+        label: 'Ваши посты',
+        no_elements: 'Постов ещё нет'
+      },
+      userResponses: {
+        label: 'Ваши ответы',
+        no_elements: 'Ответов ещё нет'
+      },
+      responsesAmountTxt: ' ответ(ов)'
     }
   }
 }

@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const imageToBase64 = require('image-to-base64');
 const dotenv = require('dotenv').config();
+const _ = require('lodash');
 
 const MongoDBStore = require('connect-mongodb-session')(session);
 const mongoose = require('mongoose');
@@ -24,7 +25,7 @@ app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 app.use(bodyParser.json());
 
 const handler = express.static('../client/build');
-const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost', '/users', '/user'];
+const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost', '/users', '/user', '/userjobs'];
 routes.forEach( route => app.use(route, handler) );
 
 const sessionStore = new MongoDBStore({
@@ -52,6 +53,7 @@ app.use(session({
 
 const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole, userHasEmptyFields } = require('./additional');
 const { constants } = require('fs');
+const { resolve } = require('path');
 
 
 
@@ -223,7 +225,7 @@ function checkIfPostIsntComplete(req, res, next) {
     Post.findOne({id: data[1]})
     .then(post => {
       if (post !== null) {
-        if (post.status === 'complete') {
+        if (post.status === 'completed') {
           res.send({status: 'error'});
         } else {
           next();
@@ -750,6 +752,7 @@ function generateResponses(requestUser, user) {
           resolve({
             title: post.title,
             postId: post.id,
+            postStatus: post.status,
             status: response.status
           })
         } else {
@@ -762,7 +765,7 @@ function generateResponses(requestUser, user) {
   return newResponses;
 }
 
-app.post('/respond', urlencodedParser, parseData, checkSignin, function(req, res) {
+app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfPostIsntComplete, function(req, res) {
   const data = req.app.locals.data;
 
   if (data[0] === 'add') {
@@ -1111,10 +1114,13 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, functi
           .then(userReponsesToLoggedin => {
             Promise.all(generateResponses(user, requestUser))
             .then(loggedinResponsesToUser => {
+              const sorted1 = _.orderBy(userReponsesToLoggedin, ['postStatus', 'status'], ['desc', 'asc']);
+              const sorted2 = _.orderBy(loggedinResponsesToUser, ['postStatus', 'status'], ['desc', 'asc']);
+
               res.send({
                 status: 'ok',
-                userReponsesToLoggedin: userReponsesToLoggedin,
-                loggedinResponsesToUser: loggedinResponsesToUser
+                userReponsesToLoggedin: sorted1,
+                loggedinResponsesToUser: sorted2
               })
             }).catch(err => {
               res.send({status: 'error'})
@@ -1300,6 +1306,88 @@ app.post('/getusers', urlencodedParser, parseData, checkSignin, function(req, re
       })
     })
   }
+});
+
+
+function generateJobsPosts(user, posts) {
+  let responsesAmounts = {};
+  user.usersRespondedToUser.forEach(response => {
+    const currentId = response.postId;
+    if (isNaN(responsesAmounts[currentId])) {
+      responsesAmounts[currentId] = 1;
+    } else {
+      responsesAmounts[currentId] += 1;
+    }
+  })
+
+
+  const newPosts = posts.map(post => {
+    const responsesAmount = responsesAmounts[post.id] === undefined ? 0 : responsesAmounts[post.id];
+    return {
+      id: post.id,
+      title: post.title,
+      status: post.status,
+      responsesAmount: responsesAmount
+    }
+  })
+
+  return newPosts;
+}
+
+function generateJobsResponses(user) {
+  const responses = user.postsUserRespondedTo.map(response => {
+    return new Promise((resolve, resject) => {
+      Post.findOne({id: response.postId})
+      .then(post => {
+        User.findOne({id: post.userId})
+        .then(postOwner => {
+          const newResponse = {
+            post: {
+              id: post.id,
+              title: post.title,
+              status: post.status
+            },
+            user: {
+              id: postOwner.id,
+              pfp: postOwner.pfp,
+              name: postOwner.name,
+              surname: postOwner.surname,
+              grade: postOwner.grade
+            },
+            status: response.status
+          };
+
+          resolve(newResponse);
+        })
+      })
+    })
+  });
+
+  return responses;
+}
+
+app.get('/getuserjobs', urlencodedParser, checkSignin, function(req, res) {
+  User.findOne({id: req.session.userId})
+  .then(user => {
+    Post.find({userId: user.id})
+    .then(posts => {
+      Promise.all(generateJobsResponses(user))
+      .then(newResponses => {
+        const newPosts = generateJobsPosts(user, posts);
+        const sortedPosts = _.orderBy(newPosts, ['status'], ['desc']);
+
+        const sortedResponses = _.orderBy(newResponses, ['post.status', 'status'], ['desc', 'asc']);
+
+        res.send({
+          status: 'ok',
+          userPosts: sortedPosts,
+          userResponses: sortedResponses
+        })
+      })
+      
+
+    })
+  })
 });
 
 var server = app.listen(8888, function() {

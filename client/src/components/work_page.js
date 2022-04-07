@@ -1,6 +1,6 @@
 import React from 'react';
 import style from '../styles/work_page.module.css';
-import { Button, Footer, getUserData, LoadingCircle, Menu, MessagePopUp, PFP, sendRequest, setUserData } from '../utils/additional';
+import { Button, Footer, getUserData, LoadingCircle, LoadingCircleContainer, Menu, MessagePopUp, PFP, sendRequest, setUserData } from '../utils/additional';
 import styled, { withTheme } from 'styled-components';
 import languages from '../utils/languages';
 
@@ -99,21 +99,12 @@ const SafeP = styled.p`
   }
 `
 
-const LoadingCircleContainer = styled.div`
-  position: fixed;
-  top: 40%;
-  background-color: ${props => props.theme.inputBckgColor};
-  border-radius: 10px;
-  border: solid 1px;
-  border-color: ${props => props.theme.borderColor};
-`
-
 const SearchInput = styled.input`
   background-color: ${props => props.theme.inputBckgColor};
   color: ${props => props.theme.textColor};
 
   width: -webkit-fill-available;
-  height: 54px;
+  height: 45px;
 
   border: none;
   font-size: 15pt;
@@ -504,7 +495,6 @@ class Searchbar extends React.Component {
           <StyledSearchbar className={style.searchbar_container}>
             <SearchInput id='search_input' placeholder={languages[this.props.language].work_page.search_txt} onKeyUp={(e) => { if (e.key === 'Enter') { this.props.refreshPosts(undefined, document.getElementById('search_input').value, this.state.selected) } }}></SearchInput>
             <img className={style.searchbar_refresh} src={this.props.theme.search_icon} alt={'s'} onClick={() => this.props.refreshPosts(undefined, document.getElementById('search_input').value, this.state.selected) }></img>
-            <img className={style.searchbar_refresh} src={this.props.theme.refresh_icon} alt={'r'} onClick={() => this.props.refreshPosts() }></img>
           </StyledSearchbar>
           {subjectFilter}
         </div>
@@ -653,11 +643,11 @@ class WorkPage extends React.Component {
             <Searchbar menuType={this.state.menuType} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts}/>
             <Posts menuType={this.state.menuType} posts={this.state.posts} history={this.props.history} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts} setMessage={this.setMessage}/>
             {noPostsMsg}
-            {loadingCircle}
             <Pagination pageNumber={this.state.pageNumber} amountOfPages={this.state.amountOfPages} setPageNumber={this.setPageNumber} theme={this.props.theme} language={this.props.language}/>
           </div>
           <Footer />
         </div>
+        {loadingCircle}
         <MessagePopUp elementId={'page'} callback={this.state.afterHidingCallback} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     );

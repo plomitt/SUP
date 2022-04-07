@@ -1,6 +1,6 @@
 import React from 'react';
 import style from '../styles/users_page.module.css';
-import { Footer, LoadingCircle, Menu, MessagePopUp, PFP, sendRequest } from '../utils/additional';
+import { Footer, LoadingCircle, LoadingCircleContainer, Menu, MessagePopUp, PFP, sendRequest } from '../utils/additional';
 import styled, { withTheme } from 'styled-components';
 import languages from '../utils/languages';
 
@@ -8,21 +8,12 @@ const StyledPost = styled.div`
   border-color: ${props => props.theme.textColor};
 `
 
-const LoadingCircleContainer = styled.div`
-  position: fixed;
-  top: 40%;
-  background-color: ${props => props.theme.inputBckgColor};
-  border-radius: 10px;
-  border: solid 1px;
-  border-color: ${props => props.theme.borderColor};
-`
-
 const SearchInput = styled.input`
   background-color: ${props => props.theme.inputBckgColor};
   color: ${props => props.theme.textColor};
 
   width: -webkit-fill-available;
-  height: 54px;
+  height: 45px;
 
   border: none;
   font-size: 15pt;
@@ -150,13 +141,19 @@ function Pagination(props) {
   )
 }
 
-function Searchbar(props){
+function Searchbar(props) {
+
+  let refreshBtn;
+  if (window.innerWidth >= 660) {
+    refreshBtn = (<img className={style.searchbar_refresh} src={props.theme.refresh_icon} alt={'r'} onClick={() => props.refreshPosts() }></img>);
+  }
+
   return (
     <div className={style.searchbar_container1}>
       <StyledSearchbar>
         <SearchInput id='search_input' placeholder={languages[props.language].work_page.search_txt} onKeyUp={(e) => { if (e.key === 'Enter') { props.refreshPosts(undefined, document.getElementById('search_input').value) } }}></SearchInput>
         <img className={style.searchbar_refresh} src={props.theme.search_icon} alt={'s'} onClick={() => props.refreshPosts(undefined, document.getElementById('search_input').value) }></img>
-        <img className={style.searchbar_refresh} src={props.theme.refresh_icon} alt={'r'} onClick={() => props.refreshPosts() }></img>
+        {refreshBtn}
       </StyledSearchbar>
     </div>
   )
@@ -301,11 +298,11 @@ class UsersPage extends React.Component {
             <Searchbar menuType={this.state.menuType} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts}/>
             <Users menuType={this.state.menuType} users={this.state.users} history={this.props.history} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts} setMessage={this.setMessage}/>
             {noPostsMsg}
-            {loadingCircle}
             <Pagination pageNumber={this.state.pageNumber} amountOfPages={this.state.amountOfPages} setPageNumber={this.setPageNumber} theme={this.props.theme} language={this.props.language}/>
           </div>
           <Footer />
         </div>
+        {loadingCircle}
         <MessagePopUp elementId={'page'} callback={this.state.afterHidingCallback} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     );

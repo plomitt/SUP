@@ -11,6 +11,7 @@ import EditPostPage from './editpost_page';
 import ViewPostPage from './viewpost_page';
 import UsersPage from './users_page';
 import ViewUserPage from './view_user_page';
+import UserJobsPage from './user_jobs_page';
 
 class Root extends React.Component {
   render() {
@@ -59,6 +60,10 @@ class Root extends React.Component {
 
     if (page === 'user') {
       return <ViewUserPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
+    }
+
+    if (page === 'userjobs') {
+      return <UserJobsPage history={context.props.history} language={context.props.language} changeTheme={context.props.changeTheme} changeLanguage={context.props.changeLanguage}/>
     }
   }
 }

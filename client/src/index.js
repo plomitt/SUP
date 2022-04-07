@@ -63,7 +63,7 @@ function changeTheme(themeName) {
   document.getElementById('body').style.backgroundColor = theme.primaryColor;
   document.getElementById('body').style.color = theme.textColor;
 
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', theme.accentColor);
+  // document.querySelector('meta[name="theme-color"]').setAttribute('content', theme.accentColor);
   localStorage.setItem('theme', themeName);
   render();
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/viewuser_page.module.css';
-import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, DisabledButton, PFP, setUserData, stringifyPhone } from '../utils/additional';
+import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, PFP, stringifyPhone, LoadingCircleContainer } from '../utils/additional';
 import languages from '../utils/languages';
 
 const StyledDropdownList = styled.ul`
@@ -98,40 +98,16 @@ const SafeP = styled.p`
   }
 `
 
-const GreenButton = styled.button`
-  display: inline-block;
-  border-style: solid;
-  border-radius: 10px;
-  border-width: 1px;
-  border-color: ${props => props.theme.greenColor};
-
-  font-size: 14pt;
-
-  height: 48px;
-
-  padding-left: 17px;
-  padding-right: 17px;
-
+const Green = styled.p`
   color: ${props => props.theme.greenColor};
-  background-color: ${props => props.theme.primaryColor};
 `
 
-const RedButton = styled.button`
-  display: inline-block;
-  border-style: solid;
-  border-radius: 10px;
-  border-width: 1px;
-  border-color: ${props => props.theme.dangerColor};
-
-  font-size: 14pt;
-
-  height: 48px;
-
-  padding-left: 17px;
-  padding-right: 17px;
-
+const Red = styled.p`
   color: ${props => props.theme.dangerColor};
-  background-color: ${props => props.theme.primaryColor};
+`
+
+const Orange = styled.p`
+  color: ${props => props.theme.orangeColor};
 `
 
 class Responses extends React.Component {
@@ -249,63 +225,77 @@ class Responses extends React.Component {
     } else {
       const listType = this.props.type;
       let newResponses = [];
-
+      
       for (let i = 0; i < responses.length; i++) {
+        const response = responses[i];
+
+        let showDropdown = true;
         let dropdown;
         let responseStatus;
-        if (responses[i].status === 'pending') {
+        if (response.status === 'pending') {
           responseStatus = (
             <p className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.pending}</p>
           );
 
-          if (listType === 'usrToLgd') {
-            dropdown = [
-              <li onClick={() => this.confirmAccept(responses[i].postId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>,
-              <li onClick={() => this.confirmDecline(responses[i].postId)}><DangerP>{languages[this.props.language].view_post_page.decline}</DangerP></li>
-            ]
-          }
-        } else if (responses[i].status === 'accepted') {
-          const Green = styled.p`
-            color: ${props => props.theme.greenColor};
-          `
-          responseStatus = (
-            <Green className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.accepted}</Green>
-          );
+          dropdown = [
+            <li onClick={() => this.confirmAccept(response.postId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>,
+            <li onClick={() => this.confirmDecline(response.postId)}><DangerP>{languages[this.props.language].view_post_page.decline}</DangerP></li>
+          ]
+        } else if (response.status === 'accepted') {
+          if (response.postStatus === 'completed') {
+            responseStatus = (
+              <Green className={style['response_status_p_margin' + listType]}>{languages[this.props.language].view_post_page.completed_btn}</Green>
+            );
 
-          if (listType === 'usrToLgd') {
+            showDropdown = false;
+          } else {
+            responseStatus = (
+              <Orange className={style.response_status_p}>{languages[this.props.language].view_post_page.in_progress}</Orange>
+            );
+  
             dropdown = [
-              <li onClick={() => this.confirmCancel(responses[i].postId)}><DangerP>{languages[this.props.language].general.menu.cancel_btn}</DangerP></li>
+              <li onClick={() => this.confirmCancel(response.postId)}><DangerP>{languages[this.props.language].general.menu.cancel_btn}</DangerP></li>
             ]
           }
-        } else if (responses[i].status === 'declined') {
-          const Red = styled.p`
-            color: ${props => props.theme.dangerColor};
-          `
+        } else if (response.status === 'declined') {
           responseStatus = (
             <Red className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.declined}</Red>
           )
 
-          if (listType === 'usrToLgd') {
-            dropdown = [
-              <li onClick={() => this.confirmAccept(responses[i].postId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>
-            ]
-          }
+          dropdown = [
+            <li onClick={() => this.confirmAccept(response.postId)}><SafeP>{languages[this.props.language].view_post_page.accept}</SafeP></li>
+          ]
         }
 
         const dropdownId = listType + i;
 
-        newResponses.push(
-          <li className={style.responses_list_li}>
-            <div className={style.post_name_container}>
-              <p className={style.post_title} onClick={() => { this.props.history.push('/viewpost?id=' + responses[i].postId) }}>{responses[i].title}</p>
-              {responseStatus}
-              <img src={this.props.theme.dots} alt={':'} id={'dots' + dropdownId} className={style['dots']} onClick={() => { this.setDropdown(dropdownId, 'block'); }} onMouseOver={() => { this.setDropdown(dropdownId, 'block'); }} onMouseLeave={() => { this.setDropdown(dropdownId, 'none'); }}/>
-            </div>
+        let dropdownField;
+        let dots;
+        if (listType === 'usrToLgd' && showDropdown) {
+          dropdownField = (
             <StyledDropdown id={'dropdown' + dropdownId} className={style.post_dropdown_container} onMouseLeave={() => { this.setDropdown(dropdownId, 'none'); }}>
               <StyledDropdownList>
                 {dropdown}
               </StyledDropdownList>
             </StyledDropdown>
+          );
+
+          dots = (<img src={this.props.theme.dots} alt={':'} id={'dots' + dropdownId} className={style['dots']} onClick={() => { this.setDropdown(dropdownId, 'block'); }} onMouseOver={() => { this.setDropdown(dropdownId, 'block'); }} onMouseLeave={() => { this.setDropdown(dropdownId, 'none'); }}/>);
+        }
+
+        let title = response.title;
+        if (this.props.menuType === 'mobile') {
+          title = title.length > 15 ? title.slice(0, 16) + '...' : title;
+        }
+
+        newResponses.push(
+          <li className={style.responses_list_li}>
+            <div className={style.post_name_container}>
+              <p className={style.post_title} onClick={() => { this.props.history.push('/viewpost?id=' + response.postId) }}>{title}</p>
+              {responseStatus}
+              {dots}
+            </div>
+            {dropdownField}
           </li>
         )
       }
@@ -350,7 +340,7 @@ class ViewUserPage extends React.Component {
       preventAutoHiding: false,
       afterHidingCallback: () => {},
       menuType: 'desktop',
-      showLoadingCircle: false,
+      showLoadingCircle: true,
       user: {
         id: userId,
         pfp: '',
@@ -371,7 +361,8 @@ class ViewUserPage extends React.Component {
       .then(response => {
         if (response.status === 'ok') {
           this.setState({
-            user: response.user
+            user: response.user,
+            showLoadingCircle: false
           });
 
           document.title = 'SUP | ' + response.user.name + ' ' + response.user.surname;
@@ -420,12 +411,17 @@ class ViewUserPage extends React.Component {
   }
 
   fetchResponses() {
+    this.setState({
+      showLoadingCircle: true
+    })
+
     sendRequest('/getresponsestouser', 'POST', {data: JSON.stringify(['view_user_page', this.state.user.id])})
     .then(response => {
       if (response.status === 'ok') {
         this.setState({
           userReponsesToLoggedin: response.userReponsesToLoggedin,
-          loggedinResponsesToUser: response.loggedinResponsesToUser
+          loggedinResponsesToUser: response.loggedinResponsesToUser,
+          showLoadingCircle: false
         })
       }
 
@@ -436,16 +432,8 @@ class ViewUserPage extends React.Component {
   }
 
   handleReport() {
-    this.setState({
-      showLoadingCircle: true
-    })
-
     sendRequest('/report', 'POST', {data: JSON.stringify(['add', 'user', this.state.user.id])})
     .then(response => {
-      this.setState({
-        showLoadingCircle: false
-      })
-
       if (response.status === 'ok') {
         this.setMessage(languages[this.props.language].work_page.reported_text, 'text', languages[this.props.language].user_preferences_page.success, 'success');
       }
@@ -561,18 +549,20 @@ class ViewUserPage extends React.Component {
       );
 
       responsesField1 = (
-        <Responses user={this.state.user} type={'usrToLgd'} responses={this.state.userReponsesToLoggedin} language={this.props.language} history={this.props.history} theme={this.props.theme} setMessage={this.setMessage} fetchResponses={this.fetchResponses}/>
+        <Responses user={this.state.user} type={'usrToLgd'} responses={this.state.userReponsesToLoggedin} language={this.props.language} history={this.props.history} theme={this.props.theme} menuType={this.state.menuType} setMessage={this.setMessage} fetchResponses={this.fetchResponses}/>
       )
 
       responsesField2 = (
-        <Responses user={this.state.user} type={'lgdToUsr'} responses={this.state.loggedinResponsesToUser} language={this.props.language} history={this.props.history} theme={this.props.theme} setMessage={this.setMessage} fetchResponses={this.fetchResponses}/>
+        <Responses user={this.state.user} type={'lgdToUsr'} responses={this.state.loggedinResponsesToUser} language={this.props.language} history={this.props.history} theme={this.props.theme} menuType={this.state.menuType} setMessage={this.setMessage} fetchResponses={this.fetchResponses}/>
       )
     }
     
     let loadingCircle;
     if (this.state.showLoadingCircle === true) {
       loadingCircle = (
-        <LoadingCircle theme={this.props.theme} />
+        <LoadingCircleContainer>
+          <LoadingCircle theme={this.props.theme}/>
+        </LoadingCircleContainer>
       )
     }
 
@@ -599,7 +589,6 @@ class ViewUserPage extends React.Component {
                   {subjectsNeedHelpField}
                 </li>
               </ul>
-              {loadingCircle}
               {buttons}
               {responsesField1}
               {responsesField2}
@@ -607,6 +596,7 @@ class ViewUserPage extends React.Component {
           </div>
           <Footer />
         </div>
+        {loadingCircle}
         <MessagePopUp elementId={'page'} callback={this.state.afterHidingCallback} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     )

@@ -157,6 +157,14 @@ const RedButton = styled.button`
   background-color: ${props => props.theme.primaryColor};
 `
 
+const Green = styled.p`
+  color: ${props => props.theme.greenColor};
+`
+
+const Red = styled.p`
+  color: ${props => props.theme.dangerColor};
+`
+
 class Responses extends React.Component {
   constructor(props) {
     super(props);
@@ -310,9 +318,7 @@ class Responses extends React.Component {
             <li onClick={() => this.confirmDecline(responses[i].userId)}><DangerP>{languages[this.props.language].view_post_page.decline}</DangerP></li>
           ]
         } else if (responses[i].status === 'accepted') {
-          const Green = styled.p`
-            color: ${props => props.theme.greenColor};
-          `
+          
           responseStatus = (
             <Green className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.accepted}</Green>
           );
@@ -321,9 +327,6 @@ class Responses extends React.Component {
             <li onClick={() => this.confirmCancel(responses[i].userId)}><DangerP>{languages[this.props.language].general.menu.cancel_btn}</DangerP></li>
           ]
         } else if (responses[i].status === 'declined') {
-          const Red = styled.p`
-            color: ${props => props.theme.dangerColor};
-          `
           responseStatus = (
             <Red className={style.response_status_p}>{languages[this.props.language].view_post_page.response_status.declined}</Red>
           )
@@ -414,7 +417,7 @@ class PostPage extends React.Component {
       preventAutoHiding: false,
       afterHidingCallback: () => {},
       menuType: 'desktop',
-      showLoadingCircle: false,
+      showLoadingCircle: true,
       subjects: [],
       title: '',
       description: '',
@@ -463,6 +466,10 @@ class PostPage extends React.Component {
   }
 
   fetchPost() {
+    this.setState({
+      showLoadingCircle: true
+    });
+
     if (this.state.postId !== null) {
       sendRequest('/getposts', 'POST', {data: JSON.stringify(['viewpost_page', this.state.postId])})
       .then(response => {
@@ -480,7 +487,8 @@ class PostPage extends React.Component {
             userGrade: response.userGrade,
             userPfp: response.userPfp,
             userPhone: stringifyPhone(response.userPhone),
-            responseStatus: response.responseStatus
+            responseStatus: response.responseStatus,
+            showLoadingCircle: false
           });
 
           document.title = 'SUP | ' + response.post.title;
@@ -776,13 +784,13 @@ class PostPage extends React.Component {
                 </li>
               </ul>
               {phoneNumberField}
-              {loadingCircle}
               {buttons}
               {responsesList}
             </div>
           </div>
           <Footer />
         </div>
+        {loadingCircle}
         <MessagePopUp elementId={'page'} callback={this.state.afterHidingCallback} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     )

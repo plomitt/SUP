@@ -8,23 +8,14 @@
   justify-content: center;
 }
 
-.pref_containerdesktop, .pref_containertablet {
-  display: flex;
-  justify-content: flex-start;
-  flex-flow: column;
-  width: 450px;
-  max-width: 450px;
-  min-width: 300px;
-}
-
-.pref_containermobile {
+.pref_containerdesktop, .pref_containermobile {
   display: flex;
   justify-content: flex-start;
   flex-flow: column;
   margin-left: 10px;
   margin-right: 10px;
   width: 90vw;
-  max-width: 450px;
+  max-width: 600px;
   min-width: 300px;
 }
 
@@ -89,7 +80,7 @@
   margin-bottom: 25px;
 }
 
-.phone_number_pdesktop, .phone_number_ptablet {
+.phone_number_pdesktop {
   font-size: 19pt;
   margin: 0;
 }
@@ -137,14 +128,21 @@
   margin-top: 40px;
 }
 
-.response_status_p, .response_status_p_marginlgdToUsr {
+.response_status_pdesktop, .response_status_pmobile {
+  width: 100px;
+  text-align: right;
+  margin-left: 16px;
+}
+
+.responses_amountdesktop, .response_post_statusdesktop, .response_post_statusmobile {
   margin-right: 0;
   margin-left: auto;
 }
 
-.response_status_p_marginusrToLgd {
-  margin-right: 40px;
+.responses_amountmobile {
+  margin-right: 0;
   margin-left: auto;
+  font-size: 12px; 
 }
 
 .dots {
@@ -164,15 +162,35 @@
   align-items: center;
 }
 
-.post_title:hover, .dots:hover{
+.post_titlemobile:hover, .post_titledesktop:hover, .dots:hover, .post_name_container1:hover, .response_post_statusdesktop:hover, .response_post_statusmobile:hover {
   opacity: 0.8;
   cursor: pointer;
-} 
+}
 
-.user_name, .user_grade {
+.user_namedesktop, .user_namemobile {
   margin: 0;
-  margin-left: 10px;
-  font-size: 21pt;
+}
+
+.user_namemobile, .response_post_statusmobile, .response_status_pmobile, .refresh_txtmobile, .post_titlemobile {
+  font-size: 12px;
+}
+
+.list_labeldesktop {
+  font-size: 20pt;
+}
+
+.list_labelmobile {
+  font-size: 22px;
+}
+
+.refresh_icndesktop {
+  max-width: 24px;
+  max-height: 24px;
+}
+
+.refresh_icnmobile {
+  max-width: 20px;
+  max-height: 20px;
 }
 
 .responses_title {
@@ -190,11 +208,6 @@
 .refresh:hover {
   opacity: 0.8;
   cursor: pointer;
-}
-
-.refresh img {
-  max-width: 24px;
-  max-height: 24px;
 }
 
 .post_dropdown_container {
