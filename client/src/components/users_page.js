@@ -1,6 +1,6 @@
 import React from 'react';
 import style from '../styles/users_page.module.css';
-import { Footer, LoadingCircle, LoadingCircleContainer, Menu, MessagePopUp, PFP, sendRequest } from '../utils/additional';
+import { Footer, LoadingCircle, LoadingCircleContainer, Menu, MessagePopUp, PFP, sendRequest, stringifyUserGrade } from '../utils/additional';
 import styled, { withTheme } from 'styled-components';
 import languages from '../utils/languages';
 
@@ -78,7 +78,7 @@ function User(props) {
               <PFP theme={props.theme} type={'users_page_post_pfp'} pfp={props.user.pfp} />
               <div>
                 <p className={style['user_name']}>{props.user.name + ' ' + props.user.surname}</p>
-                <p className={style['user_grade']}>{props.user.grade}</p>
+                <p className={style['user_grade']}>{stringifyUserGrade(props.user.role, props.user.grade, props.language)}</p>
               </div>
             </div>
           </div>

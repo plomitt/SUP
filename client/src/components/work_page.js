@@ -1,6 +1,6 @@
 import React from 'react';
 import style from '../styles/work_page.module.css';
-import { Button, Footer, getUserData, LoadingCircle, LoadingCircleContainer, Menu, MessagePopUp, PFP, sendRequest, setUserData } from '../utils/additional';
+import { Button, Footer, getUserData, LoadingCircle, LoadingCircleContainer, Menu, MessagePopUp, PFP, sendRequest, setUserData, stringifyUserGrade } from '../utils/additional';
 import styled, { withTheme } from 'styled-components';
 import languages from '../utils/languages';
 
@@ -181,24 +181,26 @@ class PostDropdown extends React.Component {
 
     this.handleRespond = this.handleRespond.bind(this);
     this.confirmPostRespond = this.confirmPostRespond.bind(this);
-    this.handleDelete = this.handleDelete.bind(this);
+    this.handlePostDelete = this.handlePostDelete.bind(this);
     this.confirmPostDelete = this.confirmPostDelete.bind(this);
     this.handleReport = this.handleReport.bind(this);
     this.confirmReport = this.confirmReport.bind(this);
+    this.handleModDelete = this.handleModDelete.bind(this);
+    this.confirmModDelete = this.confirmModDelete.bind(this);
   }
 
   confirmPostDelete() {
     const body = (
       <div className={style.dialog_btn_container}>
         <Button onClick={() => { this.props.setMessage(false, false, false, false, false); }}>{languages[this.props.language].general.menu.cancel_btn}</Button>
-        <DangerP className={style.dialog_confirm} onClick={() => { this.props.setMessage(false, false, false, false, false, () => {}); this.handleDelete(); }}>{languages[this.props.language].edit_post_page.delete_btn}</DangerP>
+        <DangerP className={style.dialog_confirm} onClick={() => { this.props.setMessage(false, false, false, false, false, () => {}); this.handlePostDelete(); }}>{languages[this.props.language].edit_post_page.delete_btn}</DangerP>
       </div>
     )
   
     this.props.setMessage(body, 'other', languages[this.props.language].edit_post_page.delete_title, 'normal', true);
   }
 
-  handleDelete() {
+  handlePostDelete() {
     sendRequest('/handlepost', 'POST', {data: JSON.stringify(['delete', this.props.post.id])})
     .then(response => {
       if (response.status === 'ok') {
@@ -274,32 +276,66 @@ class PostDropdown extends React.Component {
     this.props.setMessage(body, 'other', languages[this.props.language].view_post_page.report_title, 'normal', true);
   }
 
+  handleModDelete() {
+    sendRequest('/deletepost', 'POST', {data: JSON.stringify([this.props.post.id])})
+    .then(response => {
+      if (response.status === 'ok') {
+        this.props.setMessage(languages[this.props.language].moderation_page.reports.delete_popup.successTitle, 'text', languages[this.props.language].user_preferences_page.success, 'success');
+        this.props.refreshPosts();
+      }
+
+      if (response.status === 'error') {
+        this.props.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+      }
+    })
+  }
+  
+  confirmModDelete() {
+    const body = (
+      <div className={style.dialog_btn_container}>
+        <Button onClick={() => { this.props.setMessage(false, false, false, false, false); }}>{languages[this.props.language].general.menu.cancel_btn}</Button>
+        <DangerP className={style.dialog_confirm} onClick={() => { this.props.setMessage(false, false, false, false, false, () => {}); this.handleModDelete(); }}>{languages[this.props.language].moderation_page.reports.delete_popup.btn}</DangerP>
+      </div>
+    )
+    
+    this.props.setMessage(body, 'other', languages[this.props.language].moderation_page.reports.delete_popup.title, 'normal', true);
+  }
+
 
   render() {
     const userId = JSON.parse(localStorage.getItem('user')).id;
     const postPath = '/editpost?id=' + this.props.post.id;
+
+    let deleteBtn;
+    let reportBtn;
+    if (getUserData('moderator') === true) {
+      deleteBtn = (<li onClick={() => this.confirmModDelete()}><DangerP>{languages[this.props.language].moderation_page.reports.delete_popup.btn}</DangerP></li>);
+    } else {
+      reportBtn = (<li onClick={() => this.confirmReport()}><DangerP>{languages[this.props.language].work_page.post.report}</DangerP></li>);
+    }
   
     let toShow = [];
-    if (userId === this.props.post.userId) {
-      if (this.props.post.status === 'completed') {
-        toShow = [
-          <DisabledLi><p>{languages[this.props.language].view_post_page.completed_btn}</p></DisabledLi>
-        ];
-      } else {
-        toShow = [
-          <li onClick={() => this.props.history.push(postPath)}><p>{languages[this.props.language].work_page.post.edit}</p></li>,
-          <li onClick={() => this.confirmPostDelete()}><DangerP>{languages[this.props.language].work_page.post.delete}</DangerP></li>
-        ];
-      }
+    if (this.props.post.status === 'completed') {
+      toShow = [
+        <DisabledLi><p>{languages[this.props.language].view_post_page.completed_btn}</p></DisabledLi>,
+        deleteBtn
+      ];
+    } else if (userId === this.props.post.userId) {
+      toShow = [
+        <li onClick={() => this.props.history.push(postPath)}><p>{languages[this.props.language].work_page.post.edit}</p></li>,
+        <li onClick={() => this.confirmPostDelete()}><DangerP>{languages[this.props.language].work_page.post.delete}</DangerP></li>
+      ];
     } else {
       if (getUserData('postsUserRespondedTo').some(e => e.postId === this.props.post.id)) {
         toShow = [
-          <DisabledLi><p>{languages[this.props.language].view_post_page.responded_btn}</p></DisabledLi>
+          <DisabledLi><p>{languages[this.props.language].view_post_page.responded_btn}</p></DisabledLi>,
+          deleteBtn
         ];
       } else {
         toShow = [
           <li onClick={() => this.confirmPostRespond()}><p>{languages[this.props.language].view_post_page.respond_btn}</p></li>,
-          <li onClick={() => this.confirmReport()}><DangerP>{languages[this.props.language].work_page.post.report}</DangerP></li>
+          reportBtn,
+          deleteBtn
         ];
       }
 
@@ -336,8 +372,19 @@ function Post(props) {
   }).join(', ');
   subjects = subjects > 70 ? subjects.slice(0, 71) + '...' : subjects;
 
-
   const postPath = '/viewpost?id=' + props.post.id;
+
+  let dots;
+  let dropdown;
+  if (props.isUserVerified === true) {
+    dots = (
+      <img src={props.theme.dots} alt={':'} id={'dots' + props.eKey} className={style['dots']} onClick={() => { setDropdown(props.eKey, 'block'); }} onMouseOver={() => { setDropdown(props.eKey, 'block'); }} onMouseLeave={() => { setDropdown(props.eKey, 'none'); }}/>
+    );
+
+    dropdown = (
+      <PostDropdown eKey={props.eKey} post={props.post} history={props.history} theme={props.theme} language={props.language} refreshPosts={props.refreshPosts} setMessage={props.setMessage} />
+    )
+  }
 
   return (
     <StyledPost className={style['post_box']}>
@@ -363,14 +410,14 @@ function Post(props) {
               <PFP theme={props.theme} type={'work_page_post_pfp'} pfp={props.post.userPfp} />
               <div>
                 <p className={style['post_name']}>{props.post.userName + ' ' + props.post.userSurname}</p>
-                <p className={style['post_grade']}>{props.post.userGrade}</p>
+                <p className={style['post_grade']}>{stringifyUserGrade(props.post.userRole, props.post.userGrade, props.language)}</p>
               </div>
             </div>
-            <img src={props.theme.dots} alt={':'} id={'dots' + props.eKey} className={style['dots']} onClick={() => { setDropdown(props.eKey, 'block'); }} onMouseOver={() => { setDropdown(props.eKey, 'block'); }} onMouseLeave={() => { setDropdown(props.eKey, 'none'); }}/>
+            {dots}
           </div>
         </li>
       </ul>
-      <PostDropdown eKey={props.eKey} post={props.post} history={props.history} theme={props.theme} language={props.language} refreshPosts={props.refreshPosts} setMessage={props.setMessage} />
+      {dropdown}
     </StyledPost>
   )
 }
@@ -380,9 +427,11 @@ function Posts(props) {
   const posts = props.posts;
 
   for (let i = 0; i < posts.length; i++) {
-    postsList.push(
-      <Post post={posts[i]} eKey={i} menuType={props.menuType} history={props.history} theme={props.theme} language={props.language} refreshPosts={props.refreshPosts} setMessage={props.setMessage}/>
-    )
+    if (posts[i].skip !== true) {
+      postsList.push(
+        <Post post={posts[i]} eKey={i} isUserVerified={props.isUserVerified} menuType={props.menuType} history={props.history} theme={props.theme} language={props.language} refreshPosts={props.refreshPosts} setMessage={props.setMessage}/>
+      )
+    }
   }
   
   return (
@@ -521,6 +570,7 @@ class WorkPage extends React.Component {
       pageNumber: 1,
       amountOfPages: 1,
       posts: [],
+      isUserVerified: getUserData('verified'),
       showLoadingCircle: true
     }
   }
@@ -641,7 +691,7 @@ class WorkPage extends React.Component {
           <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
           <div id='pageBody' className={style['pageBody']}>
             <Searchbar menuType={this.state.menuType} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts}/>
-            <Posts menuType={this.state.menuType} posts={this.state.posts} history={this.props.history} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts} setMessage={this.setMessage}/>
+            <Posts menuType={this.state.menuType} isUserVerified={this.state.isUserVerified} posts={this.state.posts} history={this.props.history} theme={this.props.theme} language={this.props.language} refreshPosts={this.refreshPosts} setMessage={this.setMessage}/>
             {noPostsMsg}
             <Pagination pageNumber={this.state.pageNumber} amountOfPages={this.state.amountOfPages} setPageNumber={this.setPageNumber} theme={this.props.theme} language={this.props.language}/>
           </div>

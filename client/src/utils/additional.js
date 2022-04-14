@@ -12,6 +12,10 @@ export function capitalizeFirstLetter(string) {
   return string[0].toUpperCase() + string.slice(1).toLowerCase();
 }
 
+export function shortenString(string, length) {
+  return string.length > length ? string.slice(0, length + 1) + '...' : string;
+}
+
 export function getEmptyUserProfileFields() {
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -39,6 +43,26 @@ export function redirectIfEmptyUserProfileFields(history) {
     localStorage.setItem('authorized', 'true');
 
     history.push(path);
+  }
+}
+
+export function stringifyUserGrade(role, grade, lang) {
+  if (role === 'student') {
+    return grade
+  }
+
+  if (role === 'teacher') {
+    return languages[lang].user_preferences_page.grade.teacher;
+  }
+}
+
+export function stringifyUserEmail(role, email) {
+  if (role === 'student') {
+    return email + '@edu.sk.ru'
+  }
+
+  if (role === 'teacher') {
+    return email + '@sk.ru'
   }
 }
 
@@ -239,7 +263,7 @@ export function updateUserData(history) {
       localStorage.setItem('user', JSON.stringify(response.user));
     }
 
-    if (response.status === 'error') {
+    if (response.status === 'error' || response.status === 'banned') {
       signOut();
       history.push('/');
     }
@@ -729,13 +753,29 @@ function MenuBarDesktop(props) {
       </StyledMenuBar>
     )
   } else {
+    const usr = JSON.parse(user);
+    let newPostBtn;
+    if (usr.verified === true) {
+      newPostBtn = (
+        <img onClick={() => { props.history.push('/editpost'); }} src={props.theme.new_icon} alt={'new post'} className={style.menu_new_btn}/>
+      )
+    }
+
+    let modBtn;
+    if (usr.moderator === true) {
+      modBtn = (
+        <img onClick={() => { props.history.push('/moderation'); }} src={props.theme.mod_icon} alt={'mod'} className={style.menu_new_btn}/>
+      )
+    }
+
     return (
       <StyledMenuBar className={style.menu_bar_desktop}>
         <img src={logo} alt='sup_logo' className={style.logo} onClick={() => { props.history.push('/') }}></img>
         <MenuBarCenterText history={props.history} style={style} language={props.language} />
         <div>
           <div className={style.menu_new_btn_container}>
-            <img onClick={() => { props.history.push('/editpost'); }} src={props.theme.new_icon} alt={'new post'} className={style.menu_new_btn}/>
+            {newPostBtn}
+            {modBtn}
           </div>
           <DropdownContainer className={style.flex_box}>
             <div className={style.menubar_spacer}></div>
@@ -825,6 +865,21 @@ function MenuBarMobile(props) {
 function MenuBodyMobile(props) {
   const user = localStorage.getItem('user');
 
+  const usr = JSON.parse(user);
+  let newPostBtn;
+  if (usr.verified === true) {
+    newPostBtn = (
+      <li><StyledP onClick={() => { props.history.push('/editpost') }}>{languages[props.language].general.menu.new_post}</StyledP></li>
+    )
+  }
+
+  let modBtn;
+  if (usr.moderator === true) {
+    modBtn = (
+      <li><StyledP onClick={() => { props.history.push('/moderation') }}>{languages[props.language].general.menu.moderation}</StyledP></li>
+    )
+  }
+
   if (user === null) {
     return (
       <StyledDiv>
@@ -840,11 +895,13 @@ function MenuBodyMobile(props) {
     return (
       <StyledDiv>
         <StyledMenuBarMobileUl>
-          <li><StyledP onClick={() => { props.history.push('/') }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
+          <li className={style.menu_mobile_body_li_spacer}><StyledP onClick={() => { props.history.push('/') }}>{languages[props.language].general.menu.landing_text}</StyledP></li>
           <li><StyledP onClick={() => { props.history.push('/work') }}>{languages[props.language].general.menu.work}</StyledP></li>
           <li><StyledP onClick={() => { props.history.push('/users') }}>{languages[props.language].general.menu.talent}</StyledP></li>
-          <li><StyledP onClick={() => { props.history.push('/userjobs') }}>{languages[props.language].general.menu.myjobs}</StyledP></li>
-          <li><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
+          <li className={style.menu_mobile_body_li_spacer}><StyledP onClick={() => { props.history.push('/userjobs') }}>{languages[props.language].general.menu.myjobs}</StyledP></li>
+          {newPostBtn}
+          {modBtn}
+          <li className={style.menu_mobile_body_li_spacer}><StyledP onClick={() => { props.history.push('/userpreferences') }}>{languages[props.language].general.menu.link_user_pref_page}</StyledP></li>
           <li><ThemeSelector changeTheme={props.changeTheme} language={props.language} style={style}></ThemeSelector></li>
           <li><LanguageSelector language={props.language} style={style} changeLanguage={props.changeLanguage}></LanguageSelector></li>
           <li><DangerText onClick={() => { confirmSignOut(props.setMessage, props.history, props.language); }}>{languages[props.language].general.menu.signout_btn}</DangerText></li>

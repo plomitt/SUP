@@ -25,7 +25,7 @@ app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 app.use(bodyParser.json());
 
 const handler = express.static('../client/build');
-const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost', '/users', '/user', '/userjobs'];
+const routes = ['/', '/signin', '/signup', '/authorization', '/userpreferences', '/work', '/editpost', '/viewpost', '/users', '/user', '/userjobs', '/moderation'];
 routes.forEach( route => app.use(route, handler) );
 
 const sessionStore = new MongoDBStore({
@@ -66,7 +66,8 @@ const reportSchema = new mongoose.Schema({
   id: String,
   userId: String,
   targetType: String,
-  targetId: String
+  targetId: String,
+  status: String
 })
 const Report = mongoose.model('Report', reportSchema);
 
@@ -81,6 +82,8 @@ const userSchema = new mongoose.Schema({
   password: String,
   phone: String,
   verified: Boolean,
+  banned: String,
+  moderator: Boolean,
   accessLevel: Number,
   role: String,
   subjectsNeedHelp: Array,
@@ -109,8 +112,10 @@ function addUserToDB(email, password, role) {
       id: uuidv4(),
       email: email,
       password: password,
+      role: role,
       verified: false,
-      role: role
+      banned: 'false',
+      moderator: false
     })
 
     if (role === 'teacher') {
@@ -148,11 +153,7 @@ function udpateUser(id, toUpdate) {
     {id: id},
     {$set: toUpdate}
   ).then(res => {
-    if (res.modifiedCount === 1) {
-      return 'success'
-    } else {
-      return 'error'
-    }
+    return 'success'
   })
 }
 
@@ -173,6 +174,7 @@ function checkSignin(req, res, next) {
       .then(session => {
         if (session !== null) {
           if (session.session.userId === user.id) {
+            req.app.locals.user = user;
             next();
           } else {
             res.send('error');
@@ -185,6 +187,56 @@ function checkSignin(req, res, next) {
       res.send('error');
     }
   })
+}
+
+function checkIfUserIsUnbanned(req, res, next) {
+  const user = req.app.locals.user;
+
+  if (user.banned === 'false') {
+    next();
+  } else {
+    res.send({status: 'error'});
+  }
+}
+
+function checkIfUserBanEnded(userId, banEndDate) {
+  if (banEndDate === 'false') {
+    return true;
+  }
+
+  if (banEndDate === 'forever') {
+    return false;
+  }
+
+  const curentDate = new Date();
+  const expirationDate = new Date(banEndDate);
+
+  if (curentDate > expirationDate) {
+    udpateUser(userId, {banned: 'false'});
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function checkIfUserIsVerified(req, res, next) {
+  const user = req.app.locals.user;
+
+  if (user.verified === true) {
+    next();
+  } else {
+    res.send({status: 'error'});
+  }
+}
+
+function checkIfUserIsModerator(req, res, next) {
+  const user = req.app.locals.user;
+
+  if (user.moderator === true) {
+    next();
+  } else {
+    res.send({status: 'error'});
+  }
 }
 
 function checkReqSize(req, res, next) {
@@ -258,7 +310,9 @@ function generatePosts(posts, pageNumber) {
           post.userSurname = usr.surname;
           post.userGrade = usr.grade;
           post.userPfp = usr.pfp;
-    
+          post.userRole = usr.role;
+          post.banned = usr.banned;
+          
           resolve(post);
         })
       } else {
@@ -269,7 +323,18 @@ function generatePosts(posts, pageNumber) {
     newPosts.push(promise);
   }
 
-  return newPosts;
+  return new Promise((resolve, reject) => {
+    Promise.all(newPosts)
+    .then(newPosts => {
+      for (let i = newPosts.length - 1; i >= 0; i--) {
+        if (checkIfUserBanEnded(newPosts[i].userId, newPosts[i].banned) === false) {
+          newPosts.splice(i, 1);
+        }
+      }
+
+      resolve(newPosts);
+    })
+  });
 }
 
 
@@ -290,29 +355,34 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
         res.send({status: 'wrong'});
       } else {
         if (comparePasswords(password, user.password)) {
+          if (checkIfUserBanEnded(user.id, user.banned) === true) {
+            req.session.sessionId = uuidv4();
+            req.session.userId = user.id;
   
-          req.session.sessionId = uuidv4();
-          req.session.userId = user.id;
-
-          res.send({
-            status: 'ok',
-            user: {
-              id: user.id,
-              pfp: user.pfp,
-              name: user.name,
-              surname: user.surname,
-              grade: user.grade,
-              bio: user.bio,
-              email: user.email,
-              phone: user.phone,
-              verified: user.verified,
-              role: user.role,
-              subjectsNeedHelp: user.subjectsNeedHelp,
-              subjectsCanHelp: user.subjectsCanHelp,
-              postsUserRespondedTo: user.postsUserRespondedTo,
-              usersRespondedToUser: user.usersRespondedToUser
-            }
-          });
+            res.send({
+              status: 'ok',
+              user: {
+                id: user.id,
+                pfp: user.pfp,
+                name: user.name,
+                surname: user.surname,
+                grade: user.grade,
+                bio: user.bio,
+                email: user.email,
+                phone: user.phone,
+                verified: user.verified,
+                moderator: user.moderator,
+                banned: user.banned,
+                role: user.role,
+                subjectsNeedHelp: user.subjectsNeedHelp,
+                subjectsCanHelp: user.subjectsCanHelp,
+                postsUserRespondedTo: user.postsUserRespondedTo,
+                usersRespondedToUser: user.usersRespondedToUser
+              }
+            });
+          } else {
+            res.send({status: 'banned', endDate: user.banned});
+          }
         } else {
           res.send({status: 'wrong'});
         }
@@ -360,129 +430,216 @@ app.get('/checksignin', urlencodedParser, function(req, res) {
 });
 
 
-app.post('/authorization', urlencodedParser, parseData, checkSignin, function(req, res) {
+
+app.post('/authorization', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
   const data = req.app.locals.data;
+  const user = req.app.locals.user;
 
   const password = data[0];
 
-  User.findOne({id: req.session.userId})
-  .then(user => {
-    if (user !== null) {
-      const check = comparePasswords(password, user.password);
-      if (check === true) {
-        res.send('ok');
-      } else {
-        res.send('wrong');
-      }
+  if (user !== null) {
+    const check = comparePasswords(password, user.password);
+    if (check === true) {
+      res.send('ok');
     } else {
-      res.send('error');
+      res.send('wrong');
     }
-  })
+  } else {
+    res.send('error');
+  }
 });
 
 app.get('/getuserdata', urlencodedParser, checkSignin, function(req, res) {
-  User.findOne({id: req.session.userId})
-  .then(user => {
+    const user = req.app.locals.user;
+
     if (user !== null) {
-      res.send({
-        status: 'ok',
-        user: {
-          id: user.id,
-          pfp: user.pfp,
-          name: user.name,
-          surname: user.surname,
-          grade: user.grade,
-          bio: user.bio,
-          email: user.email,
-          phone: user.phone,
-          verified: user.verified,
-          role: user.role,
-          subjectsNeedHelp: user.subjectsNeedHelp,
-          subjectsCanHelp: user.subjectsCanHelp,
-          postsUserRespondedTo: user.postsUserRespondedTo,
-          usersRespondedToUser: user.usersRespondedToUser
-        }
-      })
+      if (checkIfUserBanEnded(user.id, user.banned) === true) {
+        res.send({
+          status: 'ok',
+          user: {
+            id: user.id,
+            pfp: user.pfp,
+            name: user.name,
+            surname: user.surname,
+            grade: user.grade,
+            bio: user.bio,
+            email: user.email,
+            phone: user.phone,
+            verified: user.verified,
+            moderator: user.moderator,
+            banned: user.banned,
+            role: user.role,
+            subjectsNeedHelp: user.subjectsNeedHelp,
+            subjectsCanHelp: user.subjectsCanHelp,
+            postsUserRespondedTo: user.postsUserRespondedTo,
+            usersRespondedToUser: user.usersRespondedToUser
+          }
+        })
+      } else {
+        res.send({status: 'banned'});
+      }
     } else {
       res.send({status: 'error'});
     }
-  })
 });
 
-app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, checkReqSize, function(req, res) {
+app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, checkReqSize, function(req, res) {
   const data = req.app.locals.data;
+  const user = req.app.locals.user;
 
   const dataToUpdateName = data[0];
 
-  User.findOne({id: req.session.userId})
-  .then(user => {
-    if (user !== null) {
-      new Promise((resolve, reject) => {
+  if (user !== null) {
+    new Promise((resolve, reject) => {
 
-        if (dataToUpdateName === 'name') {
-          if (checkName(data[1]) === true && checkName(data[2]) === true) {
-            resolve({
-              name: data[1],
-              surname: data[2]
-            });
-          } else {
-            reject('error');
-          }
-        } else if (dataToUpdateName === 'email') {
-          if (checkEmail(data[1]) === true  && checkRole(data[2]) === true) {
-            User.find({email: data[1]})
-            .then(users => {
-              if (users.length === 0) {
-                resolve({
-                  email: data[1],
-                  role: data[2],
-                  verified: false,
-                });
-              } else {
-                reject('email_taken');
-              }
-            })
-          } else {
-            error = true;
-          }
-        } else if (dataToUpdateName === 'password') {
-          if (checkPassword(data[1]) === true) {
-            resolve({
-              password: encryptPassword(data[1])
-            });
-          } else {
-            reject('error');
-          }
-        } else if (dataToUpdateName === 'subjectsNeedHelp' || dataToUpdateName === 'subjectsCanHelp') {
+      if (dataToUpdateName === 'name') {
+        if (checkName(data[1]) === true && checkName(data[2]) === true) {
+          resolve({
+            name: data[1],
+            surname: data[2]
+          });
+        } else {
+          reject('error');
+        }
+      } else if (dataToUpdateName === 'email') {
+        if (checkEmail(data[1]) === true  && checkRole(data[2]) === true) {
+          User.find({email: data[1]})
+          .then(users => {
+            if (users.length === 0) {
+              resolve({
+                email: data[1],
+                role: data[2],
+                verified: false,
+              });
+            } else {
+              reject('email_taken');
+            }
+          })
+        } else {
+          error = true;
+        }
+      } else if (dataToUpdateName === 'password') {
+        if (checkPassword(data[1]) === true) {
+          resolve({
+            password: encryptPassword(data[1])
+          });
+        } else {
+          reject('error');
+        }
+      } else if (dataToUpdateName === 'subjectsNeedHelp' || dataToUpdateName === 'subjectsCanHelp') {
+        let temp = {};
+        temp[dataToUpdateName] = data[1];
+        resolve(temp);
+      } else {
+        if (data[1].length !== 0) {
           let temp = {};
           temp[dataToUpdateName] = data[1];
           resolve(temp);
         } else {
-          if (data[1].length !== 0) {
-            let temp = {};
-            temp[dataToUpdateName] = data[1];
-            resolve(temp);
-          } else {
-            reject('error');
-          }
+          reject('error');
         }
-      }).then(toUpdate => {
-        udpateUser(user.id, toUpdate)
-        .then(result => {
-          res.send({status: result});
-        })
-      }).catch(reason => {
-        res.send({status: reason});
-      });
+      }
+    }).then(toUpdate => {
+      udpateUser(user.id, toUpdate)
+      .then(result => {
+        res.send({status: result});
+      })
+    }).catch(reason => {
+      res.send({status: reason});
+    });
 
-    } else {
-      res.send({status: 'error'});
-    }
-  })
+  } else {
+    res.send({status: 'error'});
+  }
 });
 
 
-app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwnsPost, checkIfPostIsntComplete, function(req, res) {
+
+function deletePost(id, res) {
+  Post.findOne({id: id})
+  .then(post => {
+    if (post !== null) {
+      Post.deleteOne(
+        {id: post.id}
+      ).then(result => {
+        if (result.deletedCount === 1) {
+          User.findOne({id: post.userId})
+          .then(postOwner => {
+            if (postOwner !== null) {
+              let temp = postOwner.usersRespondedToUser;
+              let usersToUpdate = [];
+
+              for (let i = temp.length - 1; i >= 0; i--) {
+                if (temp[i].postId === post.id) {
+                  usersToUpdate.push(temp[i].userId);
+                  temp.splice(i, 1);
+                }
+              }
+
+
+              udpateUser(postOwner.id, {
+                usersRespondedToUser: temp
+              }).then(result => {
+                if (result === 'success') {
+                  let updates = [];
+
+                  for (let i = 0; i <= usersToUpdate.length - 1; i++) {
+                    updates.push(new Promise((resolve, reject) => {
+                      User.findOne({id: usersToUpdate[i]})
+                      .then(user => {
+                        if (user !== null) {
+                          let temp = user.postsUserRespondedTo;
+
+                          for (let i = temp.length - 1; i >= 0; i--) {
+                            if (temp[i].postId === post.id) {
+                              temp.splice(i, 1);
+                            }
+                          }
+
+                          udpateUser(user.id, {
+                            postsUserRespondedTo: temp
+                          }).then(result1 => {
+                            if (result1 === 'success') {
+                              resolve();
+                            } else {
+                              reject('error');
+                            }
+                          })
+
+                        } else {
+                          reject('usr_not_found');
+                        }
+                      })
+                    }))
+                  }
+
+                  Promise.all(updates)
+                  .then(() => {
+                    res.send({ status: 'ok' });
+                  }).catch(error => {
+                    res.send({ status: 'error' });
+                  })
+
+
+                } else {
+                  res.send({ status: 'error' });
+                }
+              })
+            } else {
+              res.send({ status: 'error' });
+            }
+          })
+        } else {
+          res.send({ status: 'error' });
+        }
+      })
+    } else {
+      res.send({ status: 'error' });
+    }
+  })
+}
+
+app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserOwnsPost, checkIfPostIsntComplete, function(req, res) {
   const data = req.app.locals.data;
 
   if (data[0] === 'complete') {
@@ -540,92 +697,11 @@ app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserOwn
   }
 
   if (data[0] === 'delete') {
-    Post.findOne({id: data[1]})
-    .then(post => {
-      if (post !== null) {
-        Post.deleteOne(
-          {id: post.id}
-        ).then(result => {
-          if (result.deletedCount === 1) {
-            User.findOne({id: post.userId})
-            .then(postOwner => {
-              if (postOwner !== null) {
-                let temp = postOwner.usersRespondedToUser;
-                let usersToUpdate = [];
-
-                for (let i = temp.length - 1; i >= 0; i--) {
-                  if (temp[i].postId === post.id) {
-                    usersToUpdate.push(temp[i].userId);
-                    temp.splice(i, 1);
-                  }
-                }
-
-
-                udpateUser(postOwner.id, {
-                  usersRespondedToUser: temp
-                }).then(result => {
-                  if (result === 'success') {
-                    let updates = [];
-
-                    for (let i = 0; i <= usersToUpdate.length - 1; i++) {
-                      updates.push(new Promise((resolve, reject) => {
-                        User.findOne({id: usersToUpdate[i]})
-                        .then(user => {
-                          if (user !== null) {
-                            let temp = user.postsUserRespondedTo;
-
-                            for (let i = temp.length - 1; i >= 0; i--) {
-                              if (temp[i].postId === post.id) {
-                                temp.splice(i, 1);
-                              }
-                            }
-
-                            udpateUser(user.id, {
-                              postsUserRespondedTo: temp
-                            }).then(result1 => {
-                              if (result1 === 'success') {
-                                resolve();
-                              } else {
-                                reject('error');
-                              }
-                            })
-
-                          } else {
-                            reject('usr_not_found');
-                          }
-                        })
-                      }))
-                    }
-
-                    Promise.all(updates)
-                    .then(() => {
-                      res.send({ status: 'ok' });
-                    }).catch(error => {
-                      console.log(error);
-                      res.send({ status: 'error' });
-                    })
-
-
-                  } else {
-                    res.send({ status: 'error' });
-                  }
-                })
-              } else {
-                res.send({ status: 'ok' });
-              }
-            })
-          } else {
-            res.send({ status: 'error'  });
-          }
-        })
-      } else {
-        res.send({ status: 'error' });
-      }
-    })
+    deletePost(data[1], res);
   }
 });
 
-app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, res) {
+app.post('/getposts', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
   const data = req.app.locals.data;
   const reqSource = data[0];
   const pageNumber = data[1] - 1;
@@ -650,7 +726,7 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
 
     Post.find(query)
     .then(posts => {
-      Promise.all(generatePosts(posts, pageNumber))
+      generatePosts(posts, pageNumber)
       .then(newPosts => {
         res.send({
           status: 'ok',
@@ -694,7 +770,7 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
           if (post !== null) {
             User.findOne({id: post.userId})
             .then(postOwner => {
-              if (postOwner !== null) {
+              if (postOwner !== null && checkIfUserBanEnded(postOwner.id, postOwner.banned) === true) {
                 let responseStatus;
                 const postsUserRespondedTo = user.postsUserRespondedTo;
                 for (let i = 0; i < postsUserRespondedTo.length; i++) {
@@ -736,6 +812,7 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, function(req, re
 });
 
 
+
 function generateResponses(requestUser, user) {
   let responses = [];
   requestUser.usersRespondedToUser.forEach(e => {
@@ -765,70 +842,65 @@ function generateResponses(requestUser, user) {
   return newResponses;
 }
 
-app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfPostIsntComplete, function(req, res) {
+app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfPostIsntComplete, function(req, res) {
   const data = req.app.locals.data;
+  const user = req.app.locals.user;
 
   if (data[0] === 'add') {
-    User.findOne({id: req.session.userId})
-    .then(user => {
-      Post.findOne({id: data[1]})
-      .then(post => {
-        if (post !== null) {
-          User.findOne({id: post.userId})
-          .then(postOwner => {
-            if (postOwner !== null) {
-              if (user.id !== postOwner.id) {
-                if (data[0] === 'add') {
-                  let arr1 = user.postsUserRespondedTo;
-                  let arr2 = postOwner.usersRespondedToUser;
-  
-                  const check1 = arr1.some(e => e.postId === post.id);
-                  const check2 = arr2.some(e => e.postId === post.id && e.userId === user.id);
-  
-                  
-                  if (check1 && check2) {
-                    res.send({
-                      status: 'already_responded'
-                    });
-                  } else if ((!check1 && check2) || (check1 && !check2)) {
-                    res.send({
-                      status: 'error'
-                    });
-                  } else {
-                    arr1.push({
-                      postId: post.id,
-                      status: 'pending'
-                    })
-        
-                    udpateUser(user.id, {
-                      postsUserRespondedTo: arr1
-                    })
-        
-                    arr2.push({
-                      userId: user.id,
-                      postId: post.id,
-                      status: 'pending'
-                    })
-    
-                    udpateUser(postOwner.id, {
-                      usersRespondedToUser: arr2
-                    })
-    
-                    res.send({ status: 'ok' });
-                  }
-  
-                }
+    Post.findOne({id: data[1]})
+    .then(post => {
+      if (post !== null) {
+        User.findOne({id: post.userId})
+        .then(postOwner => {
+          if (postOwner !== null && checkIfUserBanEnded(postOwner.id, postOwner.banned) === true) {
+            if (user.id !== postOwner.id) {
+              let arr1 = user.postsUserRespondedTo;
+              let arr2 = postOwner.usersRespondedToUser;
+
+              const check1 = arr1.some(e => e.postId === post.id);
+              const check2 = arr2.some(e => e.postId === post.id && e.userId === user.id);
+
+              
+              if (check1 && check2) {
+                res.send({
+                  status: 'already_responded'
+                });
+              } else if ((!check1 && check2) || (check1 && !check2)) {
+                res.send({
+                  status: 'error'
+                });
               } else {
-                res.send({ status: 'error' });
+                arr1.push({
+                  postId: post.id,
+                  status: 'pending'
+                })
+    
+                udpateUser(user.id, {
+                  postsUserRespondedTo: arr1
+                })
+    
+                arr2.push({
+                  userId: user.id,
+                  postId: post.id,
+                  status: 'pending'
+                })
+
+                udpateUser(postOwner.id, {
+                  usersRespondedToUser: arr2
+                })
+
+                res.send({ status: 'ok' });
               }
             } else {
               res.send({ status: 'error' });
             }
-          })
-        } else {
-          res.send({ status: 'error' });
-        }
-      })
+          } else {
+            res.send({ status: 'error' });
+          }
+        })
+      } else {
+        res.send({ status: 'error' });
+      }
     })
   }
 
@@ -1058,58 +1130,62 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfPostIsntCo
       })
     })
   }
-
 });
 
-app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, function(req, res) {
+app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
   const data = req.app.locals.data;
 
   if (data[0] === 'viewpost_page') {
+    const postOwner = req.app.locals.user;
     const postId = data[1];
     let responses = [];
 
-    User.findOne({id: req.session.userId})
-    .then(postOwner => {
-      
-      postOwner.usersRespondedToUser.forEach(e => {
-        if (e.postId === postId) {
-          const promise = new Promise((resolve, reject) => {
-            User.findOne({id: e.userId})
-            .then(user => {
-              
-              resolve({
-                userId: user.id,
-                userName: user.name,
-                userSurname: user.surname,
-                userGrade: user.grade,
-                userPfp: user.pfp,
-                status: e.status
-              })
+    postOwner.usersRespondedToUser.map(e => {
+      if (e.postId === postId) {
+        const promise = new Promise((resolve, reject) => {
+          User.findOne({id: e.userId})
+          .then(user => {
+            
+            resolve({
+              userId: user.id,
+              userName: user.name,
+              userSurname: user.surname,
+              userGrade: user.grade,
+              userRole: user.role,
+              userPfp: user.pfp,
+              status: e.status,
+              banned: user.banned
             })
           })
-
-          responses.push(promise);
-        }
-      })
-
-      Promise.all(responses)
-      .then(responses => {
-        res.send({
-          status: 'ok',
-          responses: responses
         })
-      }).catch(error => {
-        res.send({ status: 'error' });
+
+        responses.push(promise);
+      }
+    })
+
+    Promise.all(responses)
+    .then(responses => {
+      for (let i = responses.length - 1; i >= 0; i--) {
+        if (checkIfUserBanEnded(responses[i].userId,responses[i].banned) === false) {
+          responses.splice(i, 1)
+        }
+      }
+
+      res.send({
+        status: 'ok',
+        responses: responses
       })
+    }).catch(error => {
+      res.send({ status: 'error' });
     })
   }
 
   if (data[0] === 'view_user_page') {
-    User.findOne({id: req.session.userId})
-    .then(requestUser => {
+    const requestUser = req.app.locals.user;
+
       User.findOne({id: data[1]})
       .then(user => {
-        if (user !== null) {
+        if (user !== null && checkIfUserBanEnded(user.id, user.banned) === true) {
           Promise.all(generateResponses(requestUser, user))
           .then(userReponsesToLoggedin => {
             Promise.all(generateResponses(user, requestUser))
@@ -1134,9 +1210,9 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, functi
           })
         }
       })
-    })
   }
 });
+
 
 
 function saveReport(target, type, action, userId) {
@@ -1149,7 +1225,8 @@ function saveReport(target, type, action, userId) {
             id: uuidv4(),
             userId: userId,
             targetType: type,
-            targetId: target.id
+            targetId: target.id,
+            status: 'pending'
           });
           newReport.save();
         }
@@ -1170,29 +1247,46 @@ function saveReport(target, type, action, userId) {
   })
 }
 
-app.post('/report', urlencodedParser, parseData, checkSignin, function(req, res) {
+app.post('/report', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, function(req, res) {
   const data = req.app.locals.data;
+  const user = req.app.locals.user;
 
-  User.findOne({id: req.session.userId})
-  .then(user => {
-    if (data[1] === 'post') {
-      Post.findOne({id: data[2]})
-      .then(post => {
-        saveReport(post, 'post', data[0], user.id)
-        .then(result => res.send(result));
-      })
-    }
+  if (data[1] === 'post') {
+    Post.findOne({id: data[2]})
+    .then(post => {
+      saveReport(post, 'post', data[0], user.id)
+      .then(result => res.send(result));
+    })
+  }
 
-    if (data[1] === 'user') {
-      User.findOne({id: data[2]})
-      .then(user1 => {
+  if (data[1] === 'user') {
+    User.findOne({id: data[2], verified: true})
+    .then(user1 => {
+      if (checkIfUserBanEnded(user1.id, user1.banned) === true) {
         saveReport(user1, 'user', data[0], user.id)
         .then(result => res.send(result));
-      })
-    }
-  })
+      }
+    })
+  }
 
+  if (data[0] === 'dismiss') {
+    Report.deleteOne({id: data[1]})
+    .then(result => {
+      if (result.deletedCount === 1) {
+        res.send({status: 'ok'});
+      } else {
+        res.send({status: 'error'});
+      }
+    })
+  }
 });
+
+app.post('/deletepost', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserIsModerator, function(req, res) {
+  const data = req.app.locals.data;
+
+  deletePost(data[0], res);
+});
+
 
 
 function generateUsers(users, pageNumber) {
@@ -1207,13 +1301,14 @@ function generateUsers(users, pageNumber) {
   for (let i = start; i <= end; i++) {
     const currentUser = users[i];
 
-    if (userHasEmptyFields(currentUser) === false && currentUser.verified === true) {
+    if (userHasEmptyFields(currentUser) === false && currentUser.verified === true && checkIfUserBanEnded(currentUser.id, currentUser.banned) === true) {
       const newUser = {
         id: currentUser.id,
         pfp: currentUser.pfp,
         name: currentUser.name,
         surname: currentUser.surname,
         grade: currentUser.grade,
+        role: currentUser.role,
         bio: currentUser.bio,
         subjectsCanHelp: currentUser.subjectsCanHelp,
         subjectsNeedHelp: currentUser.subjectsNeedHelp,
@@ -1232,7 +1327,7 @@ function generateUsers(users, pageNumber) {
   return newUsers;
 }
 
-app.post('/getusers', urlencodedParser, parseData, checkSignin, function(req, res) {
+app.post('/getusers', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
   const data = req.app.locals.data;
 
   if (data[0] === 'users_page') {
@@ -1244,8 +1339,8 @@ app.post('/getusers', urlencodedParser, parseData, checkSignin, function(req, re
     };
     if (data[2] !== null && data[2] !== '') {
       query = {
-      verified: true,
-      $text: {$search: data[2]}
+        verified: true,
+        $text: {$search: data[2]}
       };
     }
   
@@ -1270,43 +1365,44 @@ app.post('/getusers', urlencodedParser, parseData, checkSignin, function(req, re
   }
 
   if (data[0] === 'view_user_page') {
-    User.findOne({id: req.session.userId})
-    .then(requestUser => {
-      User.findOne({id: data[1]})
-      .then(user => {
-        if (user !== null) {
-          let phoneNumber = undefined;
-          const check1 = user.usersRespondedToUser.some(e => e.userId === requestUser.id);
-          const check2 = requestUser.usersRespondedToUser.some(e => e.userId === user.id);
-          if (check1 || check2) {
-            phoneNumber = user.phone;
-          }
+    const requestUser = req.app.locals.user;
 
-          const newUser = {
-            id: user.id,
-            pfp: user.pfp,
-            name: user.name,
-            surname: user.surname,
-            grade: user.grade,
-            bio: user.bio,
-            phone: phoneNumber,
-            subjectsCanHelp: user.subjectsCanHelp,
-            subjectsNeedHelp: user.subjectsNeedHelp
-          }
-          
-          res.send({
-            status: 'ok',
-            user: newUser
-          })
-        } else {
-          res.send({
-            status: 'error'
-          })
+    User.findOne({id: data[1]})
+    .then(user => {
+      if (user !== null && checkIfUserBanEnded(user.id, user.banned) === true) {
+        let phoneNumber = undefined;
+        const check1 = user.usersRespondedToUser.some(e => e.userId === requestUser.id);
+        const check2 = requestUser.usersRespondedToUser.some(e => e.userId === user.id);
+        if (check1 || check2) {
+          phoneNumber = user.phone;
         }
-      })
+
+        const newUser = {
+          id: user.id,
+          pfp: user.pfp,
+          name: user.name,
+          surname: user.surname,
+          grade: user.grade,
+          role: user.role,
+          bio: user.bio,
+          phone: phoneNumber,
+          subjectsCanHelp: user.subjectsCanHelp,
+          subjectsNeedHelp: user.subjectsNeedHelp
+        }
+        
+        res.send({
+          status: 'ok',
+          user: newUser
+        })
+      } else {
+        res.send({
+          status: 'error'
+        })
+      }
     })
   }
 });
+
 
 
 function generateJobsPosts(user, posts) {
@@ -1352,7 +1448,9 @@ function generateJobsResponses(user) {
               pfp: postOwner.pfp,
               name: postOwner.name,
               surname: postOwner.surname,
-              grade: postOwner.grade
+              grade: postOwner.grade,
+              role: postOwner.role,
+              banned: postOwner.banned
             },
             status: response.status
           };
@@ -1363,30 +1461,207 @@ function generateJobsResponses(user) {
     })
   });
 
-  return responses;
+  return new Promise((resolve, reject) => {
+    Promise.all(responses)
+    .then(newResponses => {
+      for (let i = responses.length - 1; i >= 0; i--) {
+        if (checkIfUserBanEnded(newResponses[i].user.id, newResponses[i].user.banned) === false) {
+          newResponses.splice(i, 1);
+        }
+      }
+
+      resolve(newResponses);
+    })
+  });
 }
 
-app.get('/getuserjobs', urlencodedParser, checkSignin, function(req, res) {
-  User.findOne({id: req.session.userId})
-  .then(user => {
-    Post.find({userId: user.id})
-    .then(posts => {
-      Promise.all(generateJobsResponses(user))
-      .then(newResponses => {
-        const newPosts = generateJobsPosts(user, posts);
-        const sortedPosts = _.orderBy(newPosts, ['status'], ['desc']);
+app.get('/getuserjobs', urlencodedParser, checkSignin, checkIfUserIsUnbanned, function(req, res) {
+  const user = req.app.locals.user;
 
-        const sortedResponses = _.orderBy(newResponses, ['post.status', 'status'], ['desc', 'asc']);
+  Post.find({userId: user.id})
+  .then(posts => {
+    generateJobsResponses(user)
+    .then(newResponses => {
+      const newPosts = generateJobsPosts(user, posts);
+      const sortedPosts = _.orderBy(newPosts, ['status'], ['desc']);
 
+      const sortedResponses = _.orderBy(newResponses, ['post.status', 'status'], ['desc', 'asc']);
+
+      res.send({
+        status: 'ok',
+        userPosts: sortedPosts,
+        userResponses: sortedResponses
+      })
+    })
+  })
+});
+
+
+
+function generateUnverifiedUsers(users) {
+  let newUsers = [];
+  
+  users.forEach(user => {
+    if (checkIfUserBanEnded(user.id, user.banned) === true) {
+      newUsers.push({
+        id: user.id,
+        name: user.name,
+        surname: user.surname,
+        grade: user.grade,
+        pfp: user.pfp,
+        email: user.email,
+        phone: user.phone,
+        bio: user.bio,
+        role: user.role
+      })
+    }
+  })
+
+  return newUsers;
+}
+
+function generateReports(reports) {
+  const newReports = reports.map(report => {
+    return new Promise((resolve, reject) => {
+      User.findOne({id: report.userId})
+      .then(reportOwner => {
+        const newReportOwner = {
+          id: reportOwner.id,
+          pfp: reportOwner.pfp,
+          name: reportOwner.name,
+          surname: reportOwner.surname,
+          grade: reportOwner.grade,
+          role: reportOwner.role,
+          banned: reportOwner.banned
+        };
+
+        if (report.targetType === 'user') {
+          User.findOne({id: report.targetId})
+          .then(user => {
+            resolve({
+              id: report.id,
+              type: 'user',
+              reportOwner: newReportOwner,
+              user: {
+                id: user.id,
+                pfp: user.pfp,
+                name: user.name,
+                surname: user.surname,
+                grade: user.grade,
+                role: user.role,
+                banned: user.banned
+              }
+            })
+          })
+        }
+
+        if (report.targetType === 'post') {
+          Post.findOne({id: report.targetId})
+          .then(post => {
+            resolve({
+              id: report.id,
+              type: 'post',
+              reportOwner: newReportOwner,
+              post: {
+                id: post.id,
+                title: post.title,
+                userId: post.userId
+              }
+            })
+          })
+        }
+      })
+    }) 
+  })
+
+  return new Promise((resolve, reject) => {
+    Promise.all(newReports)
+    .then(newReports => {
+      for (let i = newReports.length - 1; i >= 0; i--) {
+        const reportOwner = newReports[i].reportOwner;
+        
+        if (newReports[i].type === 'post') {
+          if (checkIfUserBanEnded(reportOwner.id, reportOwner.banned) === false) {
+            newReports.splice(i, 1);
+          }
+        } else {
+          const targetUser = newReports[i].user;
+          if (checkIfUserBanEnded(reportOwner.id, reportOwner.banned) === false || checkIfUserBanEnded(targetUser.id, targetUser.banned) === false) {
+            newReports.splice(i, 1);
+          }
+        }
+      }
+
+      resolve(newReports)
+    })
+  });
+}
+
+app.get('/getusersandreports', urlencodedParser, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, function(req, res) {
+  User.find({
+    verified: false,
+    pfp: {$ne: undefined},
+    name: {$ne: undefined},
+    surname: {$ne: undefined},
+    bio: {$ne: undefined},
+    phone: {$ne: undefined},
+    grade: {$ne: undefined}
+  })
+  .then(users => {
+    Report.find()
+    .then(reports => {
+      const newUsers = generateUnverifiedUsers(users);
+      const newReports = generateReports(reports);
+
+      newReports
+      .then(newReports => {
         res.send({
           status: 'ok',
-          userPosts: sortedPosts,
-          userResponses: sortedResponses
+          users: newUsers,
+          reports: newReports
         })
       })
-      
-
     })
+  })
+});
+
+app.post('/verifyuser', urlencodedParser, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, parseData, function(req, res) {
+  const data = req.app.locals.data;
+
+  udpateUser(data[0], {verified: true})
+  .then(result => {
+    if (result === 'success') {
+      res.send({status: 'ok'});
+    } else {
+      res.send({status: 'error'});
+    }
+  })
+});
+
+app.post('/banuser', urlencodedParser, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, parseData, function(req, res) {
+  const data = req.app.locals.data;
+  const duration = data[1];
+
+  let expirationDate = new Date();
+  if (duration === 'day') {
+    expirationDate.setDate(expirationDate.getDate() + 1);
+  }
+
+  if (duration === 'week') {
+    expirationDate.setDate(expirationDate.getDate() + 7);
+  }
+
+  if (duration === 'forever') {
+    expirationDate = 'forever'
+  }
+
+  udpateUser(data[0], {banned: expirationDate})
+  .then(result => {
+    if (result === 'success') {
+      res.send({status: 'ok'});
+    } else {
+      res.send({status: 'error'});
+    }
   })
 });
 

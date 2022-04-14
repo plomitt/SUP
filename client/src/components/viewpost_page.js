@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/viewpost_page.module.css';
-import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, DisabledButton, PFP, setUserData, stringifyPhone } from '../utils/additional';
+import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, DisabledButton, PFP, setUserData, stringifyPhone, stringifyUserGrade } from '../utils/additional';
 import languages from '../utils/languages';
 
 const StyledDropdownList = styled.ul`
@@ -357,7 +357,7 @@ class Responses extends React.Component {
                 <PFP theme={this.props.theme} type={'work_page_post_pfp'} pfp={responses[i].userPfp} />
                 <div>
                   <p className={style['post_name']}>{responses[i].userName + ' ' + responses[i].userSurname}</p>
-                  <p className={style['post_grade']}>{responses[i].userGrade}</p>
+                  <p className={style['post_grade']}>{stringifyUserGrade(responses[i].userRole, responses[i].userGrade, this.props.language)}</p>
                 </div>
               </div>
               {responseStatus}
@@ -407,6 +407,8 @@ class PostPage extends React.Component {
     this.handleComplete = this.handleComplete.bind(this);
     this.confirmComplete = this.confirmComplete.bind(this);
     this.windowSizeChanged = this.windowSizeChanged.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
+    this.confirmDelete = this.confirmDelete.bind(this);
 
     this.state = {
       showMessage: false,
@@ -423,12 +425,13 @@ class PostPage extends React.Component {
       description: '',
       deadline: '',
       postId: getUrlParam('id'),
-      responseStatus: ''
+      responseStatus: '',
+      isUserVerified: getUserData('verified')
     }
 
     this.fetchPost();
   }
-
+  
   componentDidMount() {
     window.addEventListener('resize', this.windowSizeChanged);
     this.windowSizeChanged();
@@ -609,6 +612,30 @@ class PostPage extends React.Component {
   
     this.setMessage(body, 'other', languages[this.props.language].view_post_page.respond_title, 'normal', true);
   }
+
+  handleDelete() {
+    sendRequest('/deletepost', 'POST', {data: JSON.stringify([this.state.postId])})
+    .then(response => {
+      if (response.status === 'ok') {
+        this.setMessage(languages[this.props.language].moderation_page.reports.delete_popup.successTitle, 'text', languages[this.props.language].user_preferences_page.success, 'success', () => {this.props.history.push('/work')});
+      }
+
+      if (response.status === 'error') {
+        this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+      }
+    })
+  }
+  
+  confirmDelete() {
+    const body = (
+      <div className={style.dialog_btn_container}>
+        <Button onClick={() => { this.setMessage(false, false, false, false, false); }}>{languages[this.props.language].general.menu.cancel_btn}</Button>
+        <DangerP className={style.dialog_confirm} onClick={() => { this.setMessage(false, false, false, false, false, () => {}); this.handleDelete(); }}>{languages[this.props.language].moderation_page.reports.delete_popup.btn}</DangerP>
+      </div>
+    )
+    
+    this.setMessage(body, 'other', languages[this.props.language].moderation_page.reports.delete_popup.title, 'normal', true);
+  }
   
   render() {
     const titleField = (
@@ -649,29 +676,35 @@ class PostPage extends React.Component {
 
 
     let buttons;
-    if (getUserData('id') === this.state.userId) {
+    if (this.state.isUserVerified === false) {
+      buttons = (
+        <div className={style.emailBtnsContainer}>
+          <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+        </div>
+      )
+    } else if (getUserData('id') === this.state.userId) {
       if (this.state.postStatus === 'in_progress') {
         buttons = (
           <div className={style.btns_container1}>
             <div className={style.emailBtnsContainer}>
-              <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
-              <Button id='edit' className={style.next_btn} onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
+              <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+              <Button id='edit' onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
             </div>
-            <GreenButton1 id='complete' className={style.delete_btn} onClick={() => { this.confirmComplete(); }}>{languages[this.props.language].view_post_page.complete_post_btn}</GreenButton1>
+            <GreenButton1 id='complete' className={style.next_btn} onClick={() => { this.confirmComplete(); }}>{languages[this.props.language].view_post_page.complete_post_btn}</GreenButton1>
           </div>
         )
       } else if (this.state.postStatus === 'completed') {
         buttons = (
           <div className={style.emailBtnsContainer}>
-            <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+            <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
             <GreenButton id='completed' className={style.next_btn}>{languages[this.props.language].view_post_page.completed_btn}</GreenButton>
           </div>
         )
       } else {
         buttons = (
           <div className={style.emailBtnsContainer}>
-            <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
-            <Button id='edit' className={style.next_btn} onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
+            <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+            <Button id='edit' onClick={() => { this.props.history.push('/editpost?id=' + this.state.postId); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
           </div>
         )
       }
@@ -679,39 +712,43 @@ class PostPage extends React.Component {
       let respondBtn;
       if (this.state.responded === true) {
         respondBtn = (
-          <DisabledButton id='responded' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>
+          <DisabledButton id='responded'>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>
         );
       } else {
         if (this.state.responseStatus === 'pending') {
-          respondBtn = (<DisabledButton id='responded' className={style.next_btn}>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>)
+          respondBtn = (<DisabledButton id='responded'>{languages[this.props.language].view_post_page.responded_btn}</DisabledButton>)
         } else if (this.state.responseStatus === 'accepted') {
           if (this.state.postStatus === 'completed') {
-            respondBtn = (<GreenButton id='completed' className={style.next_btn}>{languages[this.props.language].view_post_page.completed_btn}</GreenButton>)
+            respondBtn = (<GreenButton id='completed'>{languages[this.props.language].view_post_page.completed_btn}</GreenButton>)
           } else {
-            respondBtn = (<GreenButton id='accepted' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.accepted}</GreenButton>)
+            respondBtn = (<GreenButton id='accepted'>{languages[this.props.language].view_post_page.response_status.accepted}</GreenButton>)
           }
         } else if (this.state.responseStatus === 'declined') {
-          respondBtn = (<RedButton id='declined' className={style.next_btn}>{languages[this.props.language].view_post_page.response_status.declined}</RedButton>)
+          respondBtn = (<RedButton id='declined'>{languages[this.props.language].view_post_page.response_status.declined}</RedButton>)
         } else {
           if (this.state.postStatus === 'in_progress') {
-            respondBtn = (<DisabledButton id='in_progress' className={style.next_btn}>{languages[this.props.language].view_post_page.in_progress}</DisabledButton>)
+            respondBtn = (<DisabledButton id='in_progress'>{languages[this.props.language].view_post_page.in_progress}</DisabledButton>)
           } else if (this.state.postStatus === 'completed') {
-            respondBtn = (<DisabledButton id='completed' className={style.next_btn}>{languages[this.props.language].view_post_page.completed_btn}</DisabledButton>)
+            respondBtn = (<DisabledButton id='completed'>{languages[this.props.language].view_post_page.completed_btn}</DisabledButton>)
           } else {
-            respondBtn = (<Button id='respond' className={style.next_btn} onClick={() => { this.confirmRespond(); }}>{languages[this.props.language].view_post_page.respond_btn}</Button>)
+            respondBtn = (<Button id='respond' onClick={() => { this.confirmRespond(); }}>{languages[this.props.language].view_post_page.respond_btn}</Button>)
           }
         }
       }
 
       let reportBtn;
       if (this.state.postStatus !== 'completed' && this.state.responseStatus !== 'accepted' && this.state.responseStatus !== 'pending' && this.state.responseStatus !== 'declined') {
-        reportBtn = (<DangerButton id='report' className={style.delete_btn} onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>);
+        reportBtn = (<DangerButton id='report' className={style.next_btn} onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>);
+      }
+
+      if (getUserData('moderator') === true) {
+        reportBtn = (<DangerButton id='delete' className={style.next_btn} onClick={() => { this.confirmDelete(); }}>{languages[this.props.language].moderation_page.reports.delete_popup.btn}</DangerButton>);
       }
 
       buttons = (
         <div className={style.btns_container1}>
           <div className={style.emailBtnsContainer}>
-            <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+            <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
             {respondBtn}
           </div>
           {reportBtn}

@@ -16,6 +16,8 @@ import refresh_icon_black from '../media/refresh_icon_black.png';
 import refresh_icon_white from '../media/refresh_icon_white.png';
 import search_icon_black from '../media/search_icon_black.png';
 import search_icon_white from '../media/search_icon_white.png';
+import mod_icon_black from '../media/mod_icon_black.png';
+import mod_icon_white from '../media/mod_icon_white.png';
 
 /*
 DARK
@@ -51,6 +53,7 @@ const themes = {
     hamburger_x: hamburger_x_black,
     dots: dots_black,
     new_icon: new_icon_black,
+    mod_icon: mod_icon_black,
     arrow_right: arrow_right_black,
     arrow_left: arrow_left_black,
     refresh_icon: refresh_icon_black,
@@ -75,6 +78,7 @@ const themes = {
     hamburger_x: hamburger_x_white,
     dots: dots_white,
     new_icon: new_icon_white,
+    mod_icon: mod_icon_white,
     arrow_right: arrow_right_white,
     arrow_left: arrow_left_white,
     refresh_icon: refresh_icon_white,

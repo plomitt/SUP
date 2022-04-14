@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/viewuser_page.module.css';
-import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, PFP, stringifyPhone, LoadingCircleContainer } from '../utils/additional';
+import { MessagePopUp, Footer, Menu, Button, sendRequest, LoadingCircle, getUrlParam, DangerButton, getUserData, PFP, stringifyPhone, LoadingCircleContainer, stringifyUserGrade, SelectContainer, StyledSelect, ArrowDown } from '../utils/additional';
 import languages from '../utils/languages';
 
 const StyledDropdownList = styled.ul`
@@ -328,6 +328,8 @@ class ViewUserPage extends React.Component {
     this.confirmReport = this.confirmReport.bind(this);
     this.windowSizeChanged = this.windowSizeChanged.bind(this);
     this.fetchResponses = this.fetchResponses.bind(this);
+    this.handleBan = this.handleBan.bind(this);
+    this.confirmBan = this.confirmBan.bind(this);
 
     const userId = getUrlParam('id');
 
@@ -352,7 +354,8 @@ class ViewUserPage extends React.Component {
         subjectsNeedHelp: []
       },
       userReponsesToLoggedin: [],
-      loggedinResponsesToUser: []
+      loggedinResponsesToUser: [],
+      isUserVerified: getUserData('verified')
     }
 
 
@@ -376,7 +379,9 @@ class ViewUserPage extends React.Component {
   componentDidMount() {
     window.addEventListener('resize', this.windowSizeChanged);
     this.windowSizeChanged();
-    this.fetchResponses();
+    if (this.state.isUserVerified === true) {
+      this.fetchResponses();
+    }
   }
 
   componentWillUnmount() {
@@ -431,6 +436,45 @@ class ViewUserPage extends React.Component {
     })
   }
 
+
+  handleBan(duration) {
+    sendRequest('/banuser', 'POST', {data: JSON.stringify([this.state.user.id, duration])})
+    .then(response => {
+      if (response.status === 'ok') {
+        this.setMessage(languages[this.props.language].moderation_page.verify.ban_popup.successTitle, 'text', languages[this.props.language].user_preferences_page.success, 'success', () => {this.props.history.push('/users');});
+      }
+
+      if (response.status === 'error') {
+        this.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+      }
+    })
+  }
+
+  confirmBan(userId) {
+    const body = (
+      <div>
+        <p>{languages[this.props.language].moderation_page.verify.ban_popup.body}</p>
+        <div className={style.ban_dropdown_container}>
+          <p className={style.ban_duration}>{languages[this.props.language].moderation_page.verify.ban_popup.duration}</p>
+          <SelectContainer>
+            <StyledSelect className={style.ban_select} id='ban_duration'>
+              <option value='day'>{languages[this.props.language].moderation_page.verify.ban_popup.day}</option>
+              <option value='week'>{languages[this.props.language].moderation_page.verify.ban_popup.week}</option>
+              <option value='forever'>{languages[this.props.language].moderation_page.verify.ban_popup.forever}</option>
+            </StyledSelect>
+            <ArrowDown />
+          </SelectContainer>
+        </div>
+        <div className={style.dialog_btn_container}>
+          <Button onClick={() => { this.setMessage(false, false, false, false, false); }}>{languages[this.props.language].general.menu.cancel_btn}</Button>
+          <DangerP className={style.dialog_confirm} onClick={() => { this.setMessage(false, false, false, false, false, () => {}); this.handleBan(document.getElementById('ban_duration').value); }}>{languages[this.props.language].moderation_page.verify.ban_popup.btn}</DangerP>
+        </div>
+      </div>
+    )
+  
+    this.setMessage(body, 'other', languages[this.props.language].moderation_page.verify.ban_popup.title, 'normal', true);
+  }
+
   handleReport() {
     sendRequest('/report', 'POST', {data: JSON.stringify(['add', 'user', this.state.user.id])})
     .then(response => {
@@ -462,7 +506,7 @@ class ViewUserPage extends React.Component {
           <PFP theme={this.props.theme} type={'view_user_pfp'} pfp={this.state.user.pfp} />
           <div>
             <p className={style['user_name']}>{this.state.user.name + ' ' + this.state.user.surname}</p>
-            <p className={style['user_grade']}>{this.state.user.grade}</p>
+            <p className={style['user_grade']}>{stringifyUserGrade(this.state.user.role, this.state.user.grade, this.props.language)}</p>
           </div>
         </div>
       </div>
@@ -524,27 +568,31 @@ class ViewUserPage extends React.Component {
     let responsesField1;
     let responsesField2;
     let buttons;
-    if (getUserData('id') === this.state.user.id) {
+    if (this.state.isUserVerified === false) {
       buttons = (
         <div className={style.emailBtnsContainer}>
-          <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
-          <Button id='edit' className={style.next_btn} onClick={() => { this.props.history.push('/userpreferences'); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
+          <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+        </div>
+      )
+    } else if (getUserData('id') === this.state.user.id) {
+      buttons = (
+        <div className={style.emailBtnsContainer}>
+          <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+          <Button id='edit' onClick={() => { this.props.history.push('/userpreferences'); }}>{languages[this.props.language].general.menu.edit_btn}</Button>
         </div>
       );
     } else {
-      // buttons = (
-      //   <div className={style.btns_container1}>
-      //     <div className={style.emailBtnsContainer}>
-      //       <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
-      //       <Button id='hire' className={style.next_btn} onClick={() => {  }}>{languages[this.props.language].view_user_page.hire_btn}</Button>
-      //     </div>
-      //     <DangerButton id='report' className={style.delete_btn} onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>
-      //   </div>
-      // );
+      let ban_report_btn;
+      if (getUserData('moderator') === true) {
+        ban_report_btn = (<DangerButton id='ban' onClick={() => { this.confirmBan(); }}>{languages[this.props.language].moderation_page.verify.ban_popup.btn}</DangerButton>);
+      } else {
+        ban_report_btn = (<DangerButton id='report' onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>);
+      }
+
       buttons = (
         <div className={style.emailBtnsContainer}>
-          <Button id='back' className={style.next_btn} onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
-          <DangerButton id='report' className={style.delete_btn} onClick={() => { this.confirmReport(); }}>{languages[this.props.language].general.menu.report_btn}</DangerButton>
+          <Button id='back' onClick={() => { this.props.history.back(); }}>{languages[this.props.language].general.menu.back_btn}</Button>
+          {ban_report_btn}
         </div>
       );
 

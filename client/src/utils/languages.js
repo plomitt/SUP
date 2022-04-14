@@ -1,12 +1,19 @@
 import placeholder from '../media/placeholder_orange.png';
 
+import lp_img_0 from '../media/landing_page_img_0.png';
+import lp_img_1 from '../media/landing_page_img_1.png';
+import lp_img_2 from '../media/landing_page_img_2.png';
+import lp_img_3 from '../media/landing_page_img_3.png';
+import lp_img_4 from '../media/landing_page_img_4.png';
+
+
 const languages = {
   en: {
     general: {
       access_denied: 'Access denied',
       languageSelect: {
         en: 'English',
-        ru: 'Russian'
+        ru: 'Русский'
       },
       themeSelect: {
         'light': 'Light',
@@ -24,7 +31,8 @@ const languages = {
         editpost: 'SUP | New post',
         viewpost: 'SUP | View post',
         users: 'SUP | Tutors',
-        userjobs: 'SUP | My jobs'
+        userjobs: 'SUP | My jobs',
+        moderation: 'SUP | Moderation'
       },
       menu: {
         signin_btn: 'Sign in',
@@ -36,6 +44,8 @@ const languages = {
         work: 'Posts',
         talent: 'Tutors',
         myjobs: 'My Jobs',
+        new_post: 'New post',
+        moderation: 'Moderation',
         publish_btn: 'Submit',
         back_btn: 'Back',
         edit_btn: 'Edit',
@@ -91,9 +101,17 @@ const languages = {
         password_cant_be_same: 'New password should be different from the old one',
       },
       subjects: {
+        informatics: 'Computer Science',
         maths: 'Maths',
         physics: 'Physics',
-        informatics: 'Informatics',
+        chemistry: 'Chemistry',
+        biology: 'Biology',
+        geography: 'Geography',
+        history: 'History',
+        socstudies: 'Social Studies',
+        economy: 'Economy',
+        psychology: 'Psychology',
+        literature: 'Literature',
         russian: 'Russian language',
         english: 'English language'
       }
@@ -104,6 +122,7 @@ const languages = {
       filloutfield_text: 'Please fill out this field',
       wrong_combination_text: 'Wrong combination, please try again',
       server_error_text: 'Something went wrong, please try again later',
+      user_banned: 'Your account is banned until: ',
       create_account_text: 'Create account',
       next_btn: 'Next'
     },
@@ -124,31 +143,32 @@ const languages = {
         row0: {
           title: 'Welcome to SUP',
           text: 'SUP is an online tutoring service for students of the Skolkovo Gymnasium.',
-          image: placeholder
+          image: lp_img_0
         },
         row1: {
           title: 'By students - for students',
           text: 'Here, student experts in certain subjects help and advise in that subject without intermediaries.\n\nIn SUP you can find people willing to help you:\n- In scientific and research activities\n- In project activities\n- With the implementation of ideas in the framework of social initiatives',
-          image: placeholder
+          image: lp_img_1
         },
         row2: {
           title: 'For free',
           text: 'All assistance is carried out exclusively on a volunteer basis and does not involve payment.',
-          image: placeholder
+          image: lp_img_2
         },
         row3: {
           title: 'Upgrade',
           text: 'The tutor project in the Gymnasium is not a novelty, but previously the selection of tutors was carried out manually. Over time, we have grown significantly and are ready to go to a new level:\n\nWe are moving to an online platform.',
-          image: placeholder
+          image: lp_img_3
         },
         row4: {
           title: 'We are glad to work with you!',
           text: 'We are very proud of our tutoring staff and we promise that you will definitely not regret getting to know us.',
-          image: placeholder
+          image: lp_img_4
         }
       }
     },
     error_page: {
+      '401': 'Access denied',
       '404': 'Page not found',
       '500': 'Internal server error',
       'go_back': 'Go Back'
@@ -358,13 +378,58 @@ const languages = {
         no_elements: 'No responses yet'
       },
       responsesAmountTxt: ' response(s)'
+    },
+    moderation_page: {
+      sidebar: {
+        verify: 'Verify',
+        reports: 'Reports'
+      },
+      verify: {
+        title: 'Verify',
+        no_elements: 'No unverified users found',
+        verify_popup: {
+          title: 'Verify?',
+          body: 'Verify account? This action cannot be undone',
+          btn: 'Verify',
+          successTitle: 'Verified successfully'
+        },
+        ban_popup: {
+          title: 'Ban?',
+          body: 'Ban account? This action cannot be undone',
+          btn: 'Ban',
+          successTitle: 'Banned successfully',
+          duration: 'Ban duration: ',
+          day: 'One day',
+          week: 'One week',
+          forever: 'Forever'
+        }
+      },
+      reports: {
+        title: 'Reports',
+        no_elements: 'No reports found',
+        dismiss_popup: {
+          title: 'Dismiss?',
+          btn: 'Dismiss',
+          successTitle: 'Report dismissed successfully'
+        },
+        delete_popup: {
+          title: 'Delete post?',
+          btn: 'Delete',
+          successTitle: 'Post deleted successfully'
+        },
+        delete_ban_popup: {
+          title: 'Delete and ban?',
+          btn: 'Delete&Ban',
+          successTitle: 'Success'
+        }
+      }
     }
   },
   ru: {
     general: {
       access_denied: 'Доступ запрещён',
       languageSelect: {
-        en: 'Английский',
+        en: 'English',
         ru: 'Русский'
       },
       themeSelect: {
@@ -380,7 +445,8 @@ const languages = {
         landing: 'SUP',
         work: 'SUP | Посты',
         users: 'SUP | Тьюторы',
-        userjobs: 'SUP | Мои работы'
+        userjobs: 'SUP | Мои работы',
+        moderation: 'SUP | Модерация'
       },
       menu: {
         signin_btn: 'Войти',
@@ -392,6 +458,8 @@ const languages = {
         work: 'Посты',
         talent: 'Тьюторы',
         myjobs: 'Мои работы',
+        new_post: 'Новый пост',
+        moderation: 'Модерация',
         publish_btn: 'Опубликовать',
         back_btn: 'Назад',
         edit_btn: 'Править',
@@ -447,9 +515,17 @@ const languages = {
         password_cant_be_same: 'Новый пароль должен отличаться от старого',
       },
       subjects: {
+        informatics: 'Информатика',
         maths: 'Математика',
         physics: 'Физика',
-        informatics: 'Информатика',
+        chemistry: 'Химия',
+        biology: 'Биология',
+        geography: 'География',
+        history: 'Итсория',
+        socstudies: 'Обществознание',
+        economy: 'Экономика',
+        psychology: 'Психология',
+        literature: 'Литература',
         russian: 'Русский язык',
         english: 'Английский язык'
       }
@@ -460,6 +536,7 @@ const languages = {
       filloutfield_text: 'Пожалуйста, заполните это поле',
       wrong_combination_text: 'Неправильная комбинация, попробуйте еще раз',
       server_error_text: 'Что-то пошло не так. Пожалуйста, повторите попытку позже',
+      user_banned: 'Ваш аккаунт заблокирован до: ',
       create_account_text: 'Создать аккаунт',
       next_btn: 'Дальше'
     },
@@ -480,34 +557,35 @@ const languages = {
         row0: {
           title: 'Добро пожаловать в SUP',
           text: 'SUP - это онлайн сервис тьюторской помощи студентам Гимназии Сколково.',
-          image: placeholder
+          image: lp_img_0
         },
         row1: {
           title: 'Студентам - от студентов',
           text: 'Здесь студенты-эксперты в тех или иных предметах помогают и консультируют по учёбе без посредников.\n\nВ SUPe вы можете найти желающих помочь вам:\n- В научной и исследовательской деятельности\n- В проектной деятельности\n- С осуществлением идей в рамках социальных инициатив',
-          image: placeholder
+          image: lp_img_1
         },
         row2: {
           title: 'Бесплатно',
           text: 'Вся помощь осуществляются исключительно на волонтерских началах и не предполагает оплаты.',
-          image: placeholder
+          image: lp_img_2
         },
         row3: {
           title: 'Апгрейд',
           text: 'Тьюторский проект в Гимназии - не новинка, но раньше подбор тьюторов осуществлялся вручную. Со временем мы значительно выросли и готовы выходить на новый уровень:\n\n Мы переезжаем на онлайн-платформу.',
-          image: placeholder
+          image: lp_img_3
         },
         row4: {
           title: 'Мы рады работать с вами!',
           text: 'Мы очень гордимся своим тьюторским составом и обещаем, что вы точно не пожалеете о знакомстве с нами.',
-          image: placeholder
+          image: lp_img_4
         }
       }
     },
     error_page: {
+      '401': 'Доступ запрещён',
       '404': 'Страница не найдена',
       '500': 'Внутренняя ошибка сервера',
-      'go_back': 'Назад'
+      'go_back': 'Вернуться назад'
     },
     edit_post_page: {
       title: 'Заголовок',
@@ -714,6 +792,51 @@ const languages = {
         no_elements: 'Ответов ещё нет'
       },
       responsesAmountTxt: ' ответ(ов)'
+    },
+    moderation_page: {
+      sidebar: {
+        verify: 'Проверка',
+        reports: 'Жалобы'
+      },
+      verify: {
+        title: 'Проверка',
+        no_elements: 'Неподтверждённых пользователей нет',
+        verify_popup: {
+          title: 'Подтвердить?',
+          body: 'Подтвердить аккаунт? Это действие нельзя отменить',
+          btn: 'Подтвердить',
+          successTitle: 'Успешно подтверждён'
+        },
+        ban_popup: {
+          title: 'Заблокировать?',
+          body: 'Заблокировать аккаунт? Это действие нельзя отменить',
+          btn: 'Заблокировать',
+          successTitle: 'Успешно заблокирован',
+          duration: 'Срок: ',
+          day: 'Один день',
+          week: 'Одна неделя',
+          forever: 'Навечно'
+        }
+      },
+      reports: {
+        title: 'Жалобы',
+        no_elements: 'Жалоб нет',
+        dismiss_popup: {
+          title: 'Отклонить?',
+          btn: 'Отклонить',
+          successTitle: 'Жалоба успешно отклонена'
+        },
+        delete_popup: {
+          title: 'Удалить пост?',
+          btn: 'Удалить',
+          successTitle: 'Пост успешно удалён'
+        },
+        delete_ban_popup: {
+          title: 'Удалить и заблокировать?',
+          btn: 'Удалить&Бан',
+          successTitle: 'Успех'
+        }
+      }
     }
   }
 }

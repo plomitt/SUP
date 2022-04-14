@@ -58,7 +58,7 @@ class AuthPage extends React.Component {
           })
         }
 
-        if (response === 'error') {
+        if (response === 'error' || response === 'banned') {
           signOut();
           this.props.history.push('/');
         }

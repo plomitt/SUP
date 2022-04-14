@@ -59,10 +59,8 @@ const StyledTextarea = styled.textarea`
 
   min-height: 54px;
   max-height: 498px;
-  min-width: 303px;
-  max-width: 498px;
   height: fit-content;
-  width: fit-content;
+  width: -webkit-fill-available;
 
   resize: none;
 `
@@ -1439,22 +1437,18 @@ class UserPreferencesPage extends React.Component {
     const tab = getUrlParam('tab');
     const showPopup = getUrlParam('showpopup');
 
-    if (tab !== null) {
-      this.setState({
-        tab: tab
-      })
-    }
+    this.setTab(tab);
 
     if (showPopup === 'true') {
       this.showFieldsPopup();
     }
     
-    let unlisten = this.props.history.listen(({action, location}) => {
+    const unlisten = this.props.history.listen(({action, location}) => {
       localStorage.setItem('authorized', 'false');
       unlisten();
     })
 
-    let unblock = this.props.history.block(tx => {
+    const unblock = this.props.history.block(tx => {
       const fields = getEmptyUserProfileFields();
       if (fields.length === 0) {
         unblock();
@@ -1470,11 +1464,11 @@ class UserPreferencesPage extends React.Component {
   }
 
   windowSizeChanged() {
-    if (window.innerWidth >= 670) {
+    if (window.innerWidth >= 600) {
       this.setState({
         menuType: 'desktop'
       })
-    } else if (window.innerWidth > 420 && window.innerWidth < 670) {
+    } else if (window.innerWidth > 420 && window.innerWidth < 600) {
       this.setState({
         menuType: 'tablet'
       })
@@ -1507,9 +1501,11 @@ class UserPreferencesPage extends React.Component {
   }
 
   setTab(tab) {
-    this.setState({
-      tab: tab
-    })
+    if (tab === 'profile' || tab === 'settings') {
+      this.setState({
+        tab: tab
+      })
+    }
   }
 
   setMessage(body, msgType, title, titleType) {
@@ -1540,9 +1536,7 @@ class UserPreferencesPage extends React.Component {
           <Menu history={this.props.history} theme={this.props.theme} style={style} language={this.props.language} changeTheme={this.props.changeTheme} changeLanguage={this.props.changeLanguage} setMessage={this.setMessage}/>
           <div id='pageBody' className={style['pageBody' + this.state.menuType]}>
             <Sidebar language={this.props.language} tab={this.state.tab} setTab={this.setTab} menuType={this.state.menuType} />
-            <div className={style['pref_container' + this.state.menuType]}>
-              {tab}
-            </div>
+            {tab}
           </div>
           <Footer />
         </div>

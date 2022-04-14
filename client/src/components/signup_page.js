@@ -32,7 +32,12 @@ class SignupForm extends React.Component {
       passwordCheckResult: false,
       showPasswordField: false,
       showLoadingCircle: false,
-      showResponse: false
+      showMessage: false,
+      messageTitle: 'temp title',
+      messageType: 'text',
+      titleType: 'normal',
+      responded: false,
+      preventAutoHiding: false
     }
   }
 
@@ -41,8 +46,7 @@ class SignupForm extends React.Component {
       emailCheckResult: false,
       passwordCheckResult: false,
       showPasswordField: false,
-      showLoadingCircle: false,
-      showResponse: false
+      showLoadingCircle: false
     })
 
     const context = this;
@@ -97,9 +101,9 @@ class SignupForm extends React.Component {
             .then((response) => {
               if (response.status === 'wrong' || response.status === 'error') {
                 context.setState({
-                  showLoadingCircle: false,
-                  showResponse: languages[this.props.language].general.server_error_text
+                  showLoadingCircle: false
                 })
+                context.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
               } else {
                 localStorage.setItem('user', JSON.stringify(response.user));
                 localStorage.setItem('authorized', 'true');
@@ -110,9 +114,9 @@ class SignupForm extends React.Component {
 
           if (signupResult === 'error') {
             context.setState({
-              showLoadingCircle: false,
-              showResponse: languages[this.props.language].general.server_error_text
+              showLoadingCircle: false
             })
+            context.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
           }
 
           if (signupResult === 'email_taken') {
@@ -127,15 +131,19 @@ class SignupForm extends React.Component {
       }
     } catch(e) {
       context.setState({
-        showLoadingCircle: false,
-        showResponse: languages[this.props.language].general.server_error_text
+        showLoadingCircle: false
       })
+      context.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
     }
   }
 
-  setMessage(state) {
+  setMessage(body, msgType, title, titleType,) {
     this.setState({
-      showResponse: state
+      showMessage: body,
+      messageType: msgType,
+      messageTitle: title,
+      titleType: titleType,
+      preventAutoHiding: arguments[arguments.length - 1],
     })
   }
 
@@ -203,7 +211,7 @@ class SignupForm extends React.Component {
           </div>
           <Footer />
         </div>
-        <MessagePopUp elementId={'page'} showMessage={this.state.showResponse} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
+        <MessagePopUp elementId={'page'} showMessage={this.state.showMessage} title={this.state.messageTitle} msgType={this.state.messageType} titleType={this.state.titleType} preventAutoHiding={this.state.preventAutoHiding} style={style} theme={this.props.theme} language={this.props.language} setMessage={this.setMessage}/>
       </div>
     );
   }

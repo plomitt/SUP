@@ -101,13 +101,20 @@ class SigninForm extends React.Component {
             } else {
               this.props.history.push('/work')
             }
-
           }
 
           if (status === 'wrong') {
             context.setState({
               showLoadingCircle: false,
               showResponse: 'wrong_combination_text'
+            })
+          }
+
+          if (status === 'banned') {
+            context.setState({
+              showLoadingCircle: false,
+              showResponse: 'user_banned',
+              banExpirationDate: response.endDate
             })
           }
 
@@ -155,8 +162,18 @@ class SigninForm extends React.Component {
 
     let response;
     if (this.state.showResponse !== false) {
-      loadingCircle = (
-        <p className={style.typing_error}>{languages[this.props.language].signin_page[this.state.showResponse]}</p>
+      let banExpirationDate;
+      if (this.state.showResponse === 'user_banned') {
+
+        if (this.state.banExpirationDate === 'forever') {
+          banExpirationDate = languages[this.props.language].moderation_page.verify.ban_popup.forever;
+        } else {
+          banExpirationDate = new Date(this.state.banExpirationDate).toLocaleDateString('ru');
+        }
+      }
+
+      response = (
+        <p className={style.typing_error}>{languages[this.props.language].signin_page[this.state.showResponse]}{banExpirationDate}</p>
       )
     }
 

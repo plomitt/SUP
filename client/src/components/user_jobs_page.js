@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { withTheme } from 'styled-components';
 import style from '../styles/user_jobs_page.module.css';
-import { MessagePopUp, Footer, Menu, sendRequest, LoadingCircle, getUrlParam, PFP, LoadingCircleContainer } from '../utils/additional';
+import { MessagePopUp, Footer, Menu, sendRequest, LoadingCircle, getUrlParam, PFP, LoadingCircleContainer, stringifyUserGrade } from '../utils/additional';
 import languages from '../utils/languages';
 
 const Green = styled.p`
@@ -119,7 +119,7 @@ class Responses extends React.Component {
                 <PFP theme={this.props.theme} type={'work_page_post_pfp'} pfp={user.pfp} />
                 <div>
                   <p className={style['user_name' + menuType]}>{user.name + ' ' + user.surname}</p>
-                  <p className={style['user_name' + menuType]}>{user.grade}</p>
+                  <p className={style['user_name' + menuType]}>{stringifyUserGrade(user.role, user.grade, this.props.language)}</p>
                 </div>
               </div>
             )

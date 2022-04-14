@@ -4,7 +4,7 @@
 
 .pageBodydesktop {
   margin-top: 80px;
-  margin-bottom: 80px;
+  margin-bottom: 0px;
   display: grid;
   justify-content: center;
 }
@@ -74,10 +74,6 @@
 
 .dialog_btn_container p {
   margin: 16px;
-}
-
-.delete_btn {
-  margin-top: 15px;
 }
 
 .description {
