@@ -21,7 +21,7 @@ db.once('open', function() {
   console.log('Connection to the Database is successful.')
 });
 
-app.use(cors({origin: 'http://localhost:3000', credentials: true}));
+app.use(cors({origin: process.env.HOST_URI, credentials: true}));
 app.use(bodyParser.json());
 
 const handler = express.static('../client/build');
@@ -1665,7 +1665,7 @@ app.post('/banuser', urlencodedParser, checkSignin, checkIfUserIsModerator, chec
   })
 });
 
-var server = app.listen(8888, function() {
+var server = app.listen(process.env.PORT, function() {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at localhost:%s', port);

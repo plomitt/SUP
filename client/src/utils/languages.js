@@ -1,5 +1,3 @@
-import placeholder from '../media/placeholder_orange.png';
-
 import lp_img_0 from '../media/landing_page_img_0.png';
 import lp_img_1 from '../media/landing_page_img_1.png';
 import lp_img_2 from '../media/landing_page_img_2.png';
