@@ -1371,8 +1371,8 @@ app.post('/getusers', urlencodedParser, parseData, checkSignin, checkIfUserIsUnb
     .then(user => {
       if (user !== null && checkIfUserBanEnded(user.id, user.banned) === true) {
         let phoneNumber = undefined;
-        const check1 = user.usersRespondedToUser.some(e => e.userId === requestUser.id);
-        const check2 = requestUser.usersRespondedToUser.some(e => e.userId === user.id);
+        const check1 = user.usersRespondedToUser.some(e => e.userId === requestUser.id && e.status === 'accepted');
+        const check2 = requestUser.usersRespondedToUser.some(e => e.userId === user.id && e.status === 'accepted');
         if (check1 || check2) {
           phoneNumber = user.phone;
         }
