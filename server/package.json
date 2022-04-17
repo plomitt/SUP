@@ -1,6 +1,6 @@
 {
   "name": "sup",
-  "version": "4.1.2",
+  "version": "4.1.3",
   "description": "A web platform designed for students that need help, or want to help",
   "main": "index.js",
   "scripts": {

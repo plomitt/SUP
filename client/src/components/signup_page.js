@@ -97,19 +97,21 @@ class SignupForm extends React.Component {
         sendRequest('/signup', 'POST', data)
         .then((signupResult) => {
           if (signupResult === 'ok') {
-            sendRequest('/signin', 'POST', data)
-            .then((response) => {
-              if (response.status === 'wrong' || response.status === 'error') {
-                context.setState({
-                  showLoadingCircle: false
-                })
-                context.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
-              } else {
-                localStorage.setItem('user', JSON.stringify(response.user));
-                localStorage.setItem('authorized', 'true');
-                this.props.history.push('/userpreferences?tab=profile');
-              }
-            })
+            setTimeout(() => {
+              sendRequest('/signin', 'POST', data)
+              .then((response) => {
+                if (response.status === 'wrong' || response.status === 'error') {
+                  context.setState({
+                    showLoadingCircle: false
+                  })
+                  context.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
+                } else {
+                  localStorage.setItem('user', JSON.stringify(response.user));
+                  localStorage.setItem('authorized', 'true');
+                  this.props.history.push('/userpreferences?tab=profile');
+                }
+              })
+            }, 500)
           }
 
           if (signupResult === 'error') {
@@ -129,12 +131,7 @@ class SignupForm extends React.Component {
           }
         })
       }
-    } catch(e) {
-      context.setState({
-        showLoadingCircle: false
-      })
-      context.setMessage(languages[this.props.language].general.server_error_text, 'text', languages[this.props.language].user_preferences_page.failure, 'failure');
-    }
+    } catch(e) {}
   }
 
   setMessage(body, msgType, title, titleType,) {
