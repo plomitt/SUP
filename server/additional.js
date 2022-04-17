@@ -41,10 +41,6 @@ function checkName(name) {
     return 'too_long';
   }
 
-  if (/(?=.*[^A-Za-z0-9])/.test(name)) {
-    return 'contains_spec_chars';
-  }
-
   if (/(?=.*[0-9])/.test(name)) {
     return 'contains_digits';
   }

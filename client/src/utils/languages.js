@@ -442,6 +442,8 @@ const languages = {
         userpreferences: 'SUP | Настройки',
         landing: 'SUP',
         work: 'SUP | Посты',
+        editpost: 'SUP | Новый пост',
+        viewpost: 'SUP | Пост',
         users: 'SUP | Тьюторы',
         userjobs: 'SUP | Мои работы',
         moderation: 'SUP | Модерация'
@@ -519,7 +521,7 @@ const languages = {
         chemistry: 'Химия',
         biology: 'Биология',
         geography: 'География',
-        history: 'Итсория',
+        history: 'История',
         socstudies: 'Обществознание',
         economy: 'Экономика',
         psychology: 'Психология',
