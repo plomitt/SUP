@@ -15,8 +15,7 @@ const languages = {
       },
       themeSelect: {
         'light': 'Light',
-        'dark': 'Dark',
-        'black': 'Black'
+        'dark': 'Dark'
       },
       page_titles: {
         error: 'SUP | Error',
