@@ -21,7 +21,7 @@ db.once('open', function() {
   console.log('Connection to the Database is successful.')
 });
 
-app.use(cors({origin: process.env.HOST_URI, credentials: true}));
+app.use(cors());
 app.use(bodyParser.json());
 
 const handler = express.static('../client/build');
