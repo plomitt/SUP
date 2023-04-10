@@ -57,10 +57,10 @@ const { resolve } = require('path');
 
 
 
-app.use((req, res, next) => {
-  console.log(req.body);
-  next();
-})
+// app.use((req, res, next) => {
+//   console.log(req.body);
+//   next();
+// })
 
 const reportSchema = new mongoose.Schema({
   id: String,
