@@ -344,6 +344,8 @@ function generatePosts(posts, pageNumber) {
 app.post('/signin', urlencodedParser, parseData, function(req, res) {
   const data = req.app.locals.data;
 
+  console.log(data);
+
   const email = data[0];
   const password = data[1];
   const role = data[2];
@@ -451,6 +453,8 @@ app.post('/authorization', urlencodedParser, parseData, checkSignin, checkIfUser
 
 app.get('/getuserdata', urlencodedParser, checkSignin, function(req, res) {
     const user = req.app.locals.user;
+
+    console.log(user);
 
     if (user !== null) {
       if (checkIfUserBanEnded(user.id, user.banned) === true) {
