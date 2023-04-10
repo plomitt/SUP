@@ -21,7 +21,18 @@ db.once('open', function() {
   console.log('Connection to the Database is successful.')
 });
 
-app.use(cors({origin: process.env.HOST_URI, credentials: true}));
+app.use((req, res, next) => {
+  setHeaders(req, res, next);
+
+  // console.log(req.body);
+  // console.log(req.headers.origin);
+  // console.log(res.getHeaders());
+
+  // next();
+})
+
+
+// app.use(cors({origin: process.env.HOST_URI, credentials: true}));
 app.use(bodyParser.json());
 
 const handler = express.static('../client/build');
@@ -346,18 +357,13 @@ function setHeaders(req, res, next) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   )
 
+  if (req.method === 'OPTIONS') {
+    res.status(200).end()
+  }
+
   next();
 }
 
-app.use((req, res, next) => {
-  // setHeaders(req, res, next);
-
-  console.log(req.body);
-  console.log(req.headers.origin);
-  console.log(res.getHeaders());
-
-  next();
-})
 
 
 
