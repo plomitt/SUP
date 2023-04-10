@@ -350,7 +350,12 @@ function setHeaders(req, res, next) {
 }
 
 app.use((req, res, next) => {
-  setHeaders(req, res, next);
+  // setHeaders(req, res, next);
+
+  console.log(req.body);
+  console.log(req.headers.origin);
+  console.log(res.getHeaders());
+
   next();
 })
 
