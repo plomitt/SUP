@@ -421,8 +421,6 @@ export function checkPassword(password) {
 }
 
 export function sendRequest(path, method, data) {
-  console.log(process.env.REACT_APP_API_SERVER)
-  console.log(path)
   return $.ajax({
     url: process.env.REACT_APP_API_SERVER + path,
     method: method,
