@@ -384,7 +384,7 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
   const role = data[2];
   
   if (checkEmail(email) && checkPassword(password) && checkRole(role) === true) {
-    User.findOne({email: email, role: role})
+    User.findOne({email: email})
     .then(user => {
       if (user === null) {
         res.send({status: 'wrong'});
@@ -450,7 +450,7 @@ app.post('/signout', urlencodedParser, parseData, function(req, res) {
 app.post('/signup', urlencodedParser, parseData, function(req, res) {
   const data = req.app.locals.data;
 
-  User.findOne({email: data[0], role: data[2]})
+  User.findOne({email: data[0]})
   .then(user => {
     if (user === null) {
       if (checkEmail(data[0]) && checkPassword(data[1]) && checkRole(data[2]) === true) {
