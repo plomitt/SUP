@@ -115,7 +115,11 @@ const postSchema = new mongoose.Schema({
 });
 const Post = mongoose.model('Post', postSchema);
 
-
+const sessionSchema = new mongoose.Schema({
+  id: String,
+  userId: String
+});
+const Session = mongoose.model('Session', sessionSchema);
 
 function addUserToDB(email, password, role) {
   try {
@@ -178,13 +182,17 @@ function parseData(req, res, next) {
 }
 
 function checkSignin(req, res, next) {
-  User.findOne({id: req.session.userId})
+  const data = req.app.locals.data;
+  const userId = data[data.length-2];
+  const sessionId = data[data.length-1];
+
+  User.findOne({id: userId})
   .then(user => {
     if (user !== null) {
-      db.collection('sessions').findOne({ 'session.sessionId': req.session.sessionId })
+      db.collection('sessions').findOne({ 'id': sessionId })
       .then(session => {
         if (session !== null) {
-          if (session.session.userId === user.id) {
+          if (session.userId === user.id) {
             req.app.locals.user = user;
             next();
           } else {
@@ -260,6 +268,7 @@ function checkReqSize(req, res, next) {
 
 function checkIfUserOwnsPost(req, res, next) {
   const data = req.app.locals.data;
+  const userId = data[data.length-2];
 
   if (data[0] === 'new') {
     next();
@@ -267,7 +276,7 @@ function checkIfUserOwnsPost(req, res, next) {
     Post.findOne({id: data[1]})
     .then(post => {
       if (post !== null) {
-        if (post.userId === req.session.userId) {
+        if (post.userId === userId) {
           next();
         } else {
           res.send({status: 'error'});
@@ -382,8 +391,13 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
       } else {
         if (comparePasswords(password, user.password)) {
           if (checkIfUserBanEnded(user.id, user.banned) === true) {
-            req.session.sessionId = uuidv4();
-            req.session.userId = user.id;
+            const sid = uuidv4();
+
+            let newSession = new Session({
+              id: sid,
+              userId: user.id
+            });
+            newSession.save();
   
             res.send({
               status: 'ok',
@@ -403,7 +417,8 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
                 subjectsNeedHelp: user.subjectsNeedHelp,
                 subjectsCanHelp: user.subjectsCanHelp,
                 postsUserRespondedTo: user.postsUserRespondedTo,
-                usersRespondedToUser: user.usersRespondedToUser
+                usersRespondedToUser: user.usersRespondedToUser,
+                sid: sid
               }
             });
           } else {
@@ -420,9 +435,15 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
 
 });
 
-app.get('/signout', urlencodedParser, function(req, res) {
-  req.session.destroy();
-  res.clearCookie(process.env.SESSION_NAME);
+app.post('/signout', urlencodedParser, parseData, function(req, res) {
+  const data = req.app.locals.data;
+  const sessionId = data[data.length - 1];
+
+  console.log('delete ' + sessionId)
+  db.collection('sessions').deleteOne(
+    {id: sessionId}
+  )
+  
   res.sendStatus(200);
 });
 
@@ -448,8 +469,12 @@ app.post('/signup', urlencodedParser, parseData, function(req, res) {
   })
 });
 
-app.get('/checksignin', urlencodedParser, function(req, res) {
-  db.collection('sessions').findOne({ 'session.sessionId': req.session.sessionId })
+app.post('/checksignin', urlencodedParser, parseData, function(req, res) {
+  const data = req.app.locals.data;
+  const userId = data[data.length-2];
+  const sessionId = data[data.length-1];
+
+  Session.findOne({ 'id': sessionId })
   .then(session => {
     res.send(session !== null);
   })
@@ -667,6 +692,7 @@ function deletePost(id, res) {
 
 app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserOwnsPost, checkIfPostIsntComplete, function(req, res) {
   const data = req.app.locals.data;
+  const userId = req.app.locals.user.id;
 
   if (data[0] === 'complete') {
     Post.updateOne(
@@ -684,7 +710,7 @@ app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserIsV
   if (data[0] === 'new') {
     const newPost = new Post({
       id: uuidv4(),
-      userId: req.session.userId,
+      userId: userId,
       title: data[2],
       description: data[3],
       deadline: data[4],
@@ -732,6 +758,8 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, checkIfUserIsUnb
   const reqSource = data[0];
   const pageNumber = data[1] - 1;
   const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
+  const userId = req.app.locals.user.id;
+
 
   if (reqSource === 'workpage_list') {
     let query = {};
@@ -773,7 +801,7 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, checkIfUserIsUnb
     Post.findOne({ id: data[1] })
     .then(post => {
       if (post !== null) {
-        if (post.userId === req.session.userId) {
+        if (post.userId === userId) {
           res.send({
             status: 'ok',
             post: post
@@ -788,7 +816,7 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, checkIfUserIsUnb
   }
 
   if (reqSource === 'viewpost_page') {
-    User.findOne({id: req.session.userId})
+    User.findOne({id: userId})
     .then(user => {
       if (user !== null) {
         Post.findOne({id: data[1]})
@@ -931,7 +959,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
   }
 
   if (data[0] === 'accept') {
-    User.findOne({id: req.session.userId})
+    User.findOne({id: user.id})
     .then(postOwner => {
       Post.findOne({id: data[1]})
       .then(post => {
@@ -1019,7 +1047,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
   }
 
   if (data[0] === 'decline') {
-    User.findOne({id: req.session.userId})
+    User.findOne({id: user.id})
     .then(postOwner => {
       Post.findOne({id: data[1]})
       .then(post => {
@@ -1082,7 +1110,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
   }
 
   if (data[0] === 'cancel') {
-    User.findOne({id: req.session.userId})
+    User.findOne({id: user.id})
     .then(postOwner => {
       Post.findOne({id: data[1]})
       .then(post => {
@@ -1690,6 +1718,8 @@ app.post('/banuser', urlencodedParser, checkSignin, checkIfUserIsModerator, chec
     }
   })
 });
+
+// console.log(encryptPassword('123456'))
 
 var server = app.listen(process.env.PORT, function() {
   var host = server.address().address;

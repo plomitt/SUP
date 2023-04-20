@@ -93,14 +93,16 @@ class SigninForm extends React.Component {
 
             const fields = getEmptyUserProfileFields();
 
-            if (fields.length !== 0) {
-              const path = '/userpreferences?tab=profile&showpopup=true'
-              localStorage.setItem('authorized', 'true');
-
-              this.props.history.push(path);
-            } else {
-              //this.props.history.push('/work');
-            }
+            setTimeout(() => {
+              if (fields.length !== 0) {
+                const path = '/userpreferences?tab=profile&showpopup=true'
+                localStorage.setItem('authorized', 'true');
+  
+                this.props.history.push(path);
+              } else {
+                this.props.history.push('/work');
+              }
+            }, 1000);
           }
 
           if (status === 'wrong') {

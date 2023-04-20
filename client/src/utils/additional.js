@@ -252,7 +252,7 @@ export const ArrowDown = styled.div`
 `
 
 export function checkIfUserSignedIn() {
-  return sendRequest('/checksignin', 'GET');
+  return sendRequest('/checksignin', 'POST');
 }
 
 export function updateUserData(history) {
@@ -421,16 +421,34 @@ export function checkPassword(password) {
 }
 
 export function sendRequest(path, method, data) {
+  let data2 = [];
+  if (data !== undefined) {
+    data2 = JSON.parse(data.data); 
+  }
+
+  const userJSON = localStorage.getItem('user');
+  if (userJSON !== null) {
+    const user = JSON.parse(userJSON);
+    const sid = user['sid'];
+    data2.push(user['id']);
+    data2.push(sid);
+  } else {
+    data2.push('no_id');
+    data2.push('no_sid');
+  }
+  
+  console.log(data2)
+
   return $.ajax({
     url: process.env.REACT_APP_API_SERVER + path,
     method: method,
-    data: data
+    data: {data: JSON.stringify(data2)}
   })
 }
 
 export function signOut() {
   try {
-    sendRequest('/signout', 'GET');
+    sendRequest('/signout', 'POST');
     localStorage.removeItem('user');
     localStorage.removeItem('authorized');
   } catch (e) {}
