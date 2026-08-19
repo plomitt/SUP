@@ -105,4 +105,14 @@ function userHasEmptyFields(user) {
   return fields.some(field => user[field] === undefined)
 }
 
-module.exports = {checkBio, checkEmail, checkGrade, checkName, checkPassword, checkRole, userHasEmptyFields}
+const UPDATABLE_USER_FIELDS = ['name', 'email', 'password', 'subjectsNeedHelp', 'subjectsCanHelp', 'pfp', 'bio', 'phone', 'grade'];
+
+function containsObject(value) {
+  if (Array.isArray(value)) {
+    return value.some(containsObject);
+  }
+
+  return value !== null && typeof value === 'object';
+}
+
+module.exports = {checkBio, checkEmail, checkGrade, checkName, checkPassword, checkRole, userHasEmptyFields, containsObject, UPDATABLE_USER_FIELDS}

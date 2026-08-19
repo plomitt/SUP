@@ -115,7 +115,7 @@
 
   display: flex;
   flex-flow: column;
-  align-items: end;
+  align-items: flex-end;
 
   border-bottom: solid grey 1px;
 }

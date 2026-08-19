@@ -436,8 +436,6 @@ export function sendRequest(path, method, data) {
     data2.push('no_id');
     data2.push('no_sid');
   }
-  
-  console.log(data2)
 
   return $.ajax({
     url: process.env.REACT_APP_API_SERVER + path,
