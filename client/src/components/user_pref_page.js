@@ -349,6 +349,7 @@ class Password extends React.Component {
       password1CheckResult: true,
       showPassword2Field: false,
       password2CheckResult: true,
+      password3CheckResult: true,
       showLoadingCircle: false
     }
   }
@@ -359,11 +360,26 @@ class Password extends React.Component {
       password1CheckResult: true,
       showPassword2Field: false,
       password2CheckResult: true,
+      password3CheckResult: true,
       showLoadingCircle: false,
     })
   }
 
   handleClick() {
+    const password3 = document.getElementById('password3').value;
+
+    if (password3 === '') {
+      this.setState({
+        password3CheckResult: 'empty_password',
+        showLoadingCircle: false
+      })
+      return;
+    }
+
+    this.setState({
+      password3CheckResult: true
+    })
+
     const password1 = document.getElementById('password1').value;
     const passwordCheck1 = checkPassword(password1);
 
@@ -403,7 +419,7 @@ class Password extends React.Component {
           })
 
 
-          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['password', password1])})
+          sendRequest('/updateuserpreferences', 'POST', {data: JSON.stringify(['password', password1, password3])})
           .then(response => {
             this.setState({
               password1CheckResult: true,
@@ -421,6 +437,12 @@ class Password extends React.Component {
               })
             }
 
+
+            if (response.status === 'wrong_password') {
+              this.setState({
+                password3CheckResult: 'wrong_password'
+              })
+            }
 
             if (response.status === 'error') {
               this.setState({
@@ -456,6 +478,13 @@ class Password extends React.Component {
       )
     }
 
+    let passwordIncorrect3;
+    if (this.state.password3CheckResult !== true) {
+      passwordIncorrect3 = (
+        <p className={style.typing_error}>{languages[this.props.language].user_preferences_page[this.state.password3CheckResult]}</p>
+      )
+    }
+
     let passwordField2;
     if (this.state.showPassword2Field === true) {
       passwordField2 = (
@@ -487,9 +516,14 @@ class Password extends React.Component {
     } else {
       return (
         <div className={style.email_container}>
+          <StyledLabel htmlFor='password3'>{languages[this.props.language].user_preferences_page.password.enter_current_password}</StyledLabel>
+          <StyledInputDiv>
+            <StyledInput className={style.password} id='password3' type='password' placeholder={languages[this.props.language].user_preferences_page.password.placeholder} onKeyUp={(e) => { if (e.key === 'Enter') { this.handleClick() }; if (e.key === 'Escape') { this.hideMenu() } }} autoFocus></StyledInput>
+          </StyledInputDiv>
+          {passwordIncorrect3}
           <StyledLabel htmlFor='password1'>{languages[this.props.language].user_preferences_page.password.enter_new_password}</StyledLabel>
           <StyledInputDiv>
-            <StyledInput className={style.password} id='password1' type='password' placeholder={languages[this.props.language].user_preferences_page.password.placeholder} onKeyUp={(e) => { if (e.key === 'Enter') { this.handleClick() }; if (e.key === 'Escape') { this.hideMenu() } }} autoFocus></StyledInput>
+            <StyledInput className={style.password} id='password1' type='password' placeholder={languages[this.props.language].user_preferences_page.password.placeholder} onKeyUp={(e) => { if (e.key === 'Enter') { this.handleClick() }; if (e.key === 'Escape') { this.hideMenu() } }}></StyledInput>
           </StyledInputDiv>
           {passwordIncorrect1}
           {passwordField2}

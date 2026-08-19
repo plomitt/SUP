@@ -62,7 +62,7 @@ app.use(session({
   }
 }));
 
-const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole, userHasEmptyFields } = require('./additional');
+const { checkEmail, checkPassword, checkGrade, checkBio, checkName, checkRole, userHasEmptyFields, containsObject, UPDATABLE_USER_FIELDS } = require('./additional');
 const { constants } = require('fs');
 const { resolve } = require('path');
 
@@ -174,7 +174,18 @@ function udpateUser(id, toUpdate) {
 
 function parseData(req, res, next) {
   try {
-    req.app.locals.data = JSON.parse(req.body.data);
+    const raw = req.body.data !== undefined ? req.body.data : req.query.data;
+    const data = JSON.parse(raw);
+
+    if (Array.isArray(data) === false) {
+      throw new Error('data is not an array');
+    }
+
+    if (containsObject(data) === true) {
+      throw new Error('data contains an object');
+    }
+
+    req.data = data;
     next();
   } catch (error) {
     res.send({status: 'error'});
@@ -182,9 +193,14 @@ function parseData(req, res, next) {
 }
 
 function checkSignin(req, res, next) {
-  const data = req.app.locals.data;
+  const data = req.data;
   const userId = data[data.length-2];
   const sessionId = data[data.length-1];
+
+  if (typeof userId !== 'string' || typeof sessionId !== 'string') {
+    res.send('error');
+    return;
+  }
 
   User.findOne({id: userId})
   .then(user => {
@@ -193,7 +209,7 @@ function checkSignin(req, res, next) {
       .then(session => {
         if (session !== null) {
           if (session.userId === user.id) {
-            req.app.locals.user = user;
+            req.user = user;
             next();
           } else {
             res.send('error');
@@ -202,14 +218,16 @@ function checkSignin(req, res, next) {
           res.send('error');
         }
       })
+      .catch(() => { res.send('error') });
     } else {
       res.send('error');
     }
   })
+  .catch(() => { res.send('error') });
 }
 
 function checkIfUserIsUnbanned(req, res, next) {
-  const user = req.app.locals.user;
+  const user = req.user;
 
   if (user.banned === 'false') {
     next();
@@ -239,7 +257,7 @@ function checkIfUserBanEnded(userId, banEndDate) {
 }
 
 function checkIfUserIsVerified(req, res, next) {
-  const user = req.app.locals.user;
+  const user = req.user;
 
   if (user.verified === true) {
     next();
@@ -249,7 +267,7 @@ function checkIfUserIsVerified(req, res, next) {
 }
 
 function checkIfUserIsModerator(req, res, next) {
-  const user = req.app.locals.user;
+  const user = req.user;
 
   if (user.moderator === true) {
     next();
@@ -266,30 +284,33 @@ function checkReqSize(req, res, next) {
   }
 }
 
-function checkIfUserOwnsPost(req, res, next) {
-  const data = req.app.locals.data;
-  const userId = data[data.length-2];
+function checkIfUserOwnsPost(bypassAction) {
+  return function(req, res, next) {
+    const data = req.data;
+    const userId = req.user.id;
 
-  if (data[0] === 'new') {
-    next();
-  } else {
-    Post.findOne({id: data[1]})
-    .then(post => {
-      if (post !== null) {
-        if (post.userId === userId) {
-          next();
+    if (data[0] === bypassAction) {
+      next();
+    } else {
+      Post.findOne({id: data[1]})
+      .then(post => {
+        if (post !== null) {
+          if (post.userId === userId) {
+            next();
+          } else {
+            res.send({status: 'error'});
+          }
         } else {
           res.send({status: 'error'});
         }
-      } else {
-        res.send({status: 'error'});
-      }
-    })
+      })
+      .catch(() => { res.send({status: 'error'}) });
+    }
   }
 }
 
 function checkIfPostIsntComplete(req, res, next) {
-  const data = req.app.locals.data;
+  const data = req.data;
 
   if (data[0] === 'new') {
     next();
@@ -306,6 +327,7 @@ function checkIfPostIsntComplete(req, res, next) {
         res.send({status: 'error'});
       }
     })
+    .catch(() => { res.send({status: 'error'}) });
   }
 }
 
@@ -324,6 +346,11 @@ function generatePosts(posts, pageNumber) {
       if (currentPost !== undefined) {
         User.findOne({id: currentPost.userId})
         .then(usr => {
+          if (usr === null) {
+            resolve(null);
+            return;
+          }
+
           let post = JSON.parse(JSON.stringify(currentPost));
     
           post.userName = usr.name;
@@ -335,6 +362,7 @@ function generatePosts(posts, pageNumber) {
           
           resolve(post);
         })
+        .catch(reject);
       } else {
         reject();
       }
@@ -346,6 +374,8 @@ function generatePosts(posts, pageNumber) {
   return new Promise((resolve, reject) => {
     Promise.all(newPosts)
     .then(newPosts => {
+      newPosts = newPosts.filter(post => post !== null);
+
       for (let i = newPosts.length - 1; i >= 0; i--) {
         if (checkIfUserBanEnded(newPosts[i].userId, newPosts[i].banned) === false) {
           newPosts.splice(i, 1);
@@ -354,12 +384,13 @@ function generatePosts(posts, pageNumber) {
 
       resolve(newPosts);
     })
+    .catch(reject);
   });
 }
 
 function setHeaders(req, res, next) {
   res.setHeader('Access-Control-Allow-Credentials', true)
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Origin', process.env.HOST_URI || '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -368,6 +399,7 @@ function setHeaders(req, res, next) {
 
   if (req.method === 'OPTIONS') {
     res.status(200).end()
+    return;
   }
 
   next();
@@ -377,7 +409,7 @@ function setHeaders(req, res, next) {
 
 
 app.post('/signin', urlencodedParser, parseData, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
 
   const email = data[0];
   const password = data[1];
@@ -429,6 +461,7 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
         }
       }
     })
+    .catch(() => { res.send({status: 'error'}) });
   } else {
     res.send({status: 'error'});
   }
@@ -436,10 +469,9 @@ app.post('/signin', urlencodedParser, parseData, function(req, res) {
 });
 
 app.post('/signout', urlencodedParser, parseData, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
   const sessionId = data[data.length - 1];
 
-  console.log('delete ' + sessionId)
   db.collection('sessions').deleteOne(
     {id: sessionId}
   )
@@ -448,7 +480,7 @@ app.post('/signout', urlencodedParser, parseData, function(req, res) {
 });
 
 app.post('/signup', urlencodedParser, parseData, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
 
   User.findOne({email: data[0]})
   .then(user => {
@@ -467,10 +499,11 @@ app.post('/signup', urlencodedParser, parseData, function(req, res) {
       res.send('email_taken');
     }
   })
+  .catch(() => { res.send('error') });
 });
 
 app.post('/checksignin', urlencodedParser, parseData, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
   const userId = data[data.length-2];
   const sessionId = data[data.length-1];
 
@@ -478,15 +511,21 @@ app.post('/checksignin', urlencodedParser, parseData, function(req, res) {
   .then(session => {
     res.send(session !== null);
   })
+  .catch(() => { res.send(false) });
 });
 
 
 
 app.post('/authorization', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
-  const data = req.app.locals.data;
-  const user = req.app.locals.user;
+  const data = req.data;
+  const user = req.user;
 
   const password = data[0];
+
+  if (typeof password !== 'string') {
+    res.send('error');
+    return;
+  }
 
   if (user !== null) {
     const check = comparePasswords(password, user.password);
@@ -500,8 +539,8 @@ app.post('/authorization', urlencodedParser, parseData, checkSignin, checkIfUser
   }
 });
 
-app.get('/getuserdata', urlencodedParser, checkSignin, function(req, res) {
-    const user = req.app.locals.user;
+app.get('/getuserdata', urlencodedParser, parseData, checkSignin, function(req, res) {
+    const user = req.user;
 
     if (user !== null) {
       if (checkIfUserBanEnded(user.id, user.banned) === true) {
@@ -535,10 +574,15 @@ app.get('/getuserdata', urlencodedParser, checkSignin, function(req, res) {
 });
 
 app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, checkReqSize, function(req, res) {
-  const data = req.app.locals.data;
-  const user = req.app.locals.user;
+  const data = req.data;
+  const user = req.user;
 
   const dataToUpdateName = data[0];
+
+  if (UPDATABLE_USER_FIELDS.includes(dataToUpdateName) === false) {
+    res.send({status: 'error'});
+    return;
+  }
 
   if (user !== null) {
     new Promise((resolve, reject) => {
@@ -567,15 +611,17 @@ app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, che
             }
           })
         } else {
-          error = true;
+          reject('error');
         }
       } else if (dataToUpdateName === 'password') {
-        if (checkPassword(data[1]) === true) {
+        if (checkPassword(data[1]) !== true) {
+          reject('error');
+        } else if (typeof data[2] !== 'string' || comparePasswords(data[2], user.password) === false) {
+          reject('wrong_password');
+        } else {
           resolve({
             password: encryptPassword(data[1])
           });
-        } else {
-          reject('error');
         }
       } else if (dataToUpdateName === 'subjectsNeedHelp' || dataToUpdateName === 'subjectsCanHelp') {
         let temp = {};
@@ -591,7 +637,7 @@ app.post('/updateuserpreferences', urlencodedParser, parseData, checkSignin, che
         }
       }
     }).then(toUpdate => {
-      udpateUser(user.id, toUpdate)
+      return udpateUser(user.id, toUpdate)
       .then(result => {
         res.send({status: result});
       })
@@ -658,7 +704,7 @@ function deletePost(id, res) {
                           })
 
                         } else {
-                          reject('usr_not_found');
+                          resolve();
                         }
                       })
                     }))
@@ -690,9 +736,9 @@ function deletePost(id, res) {
   })
 }
 
-app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserOwnsPost, checkIfPostIsntComplete, function(req, res) {
-  const data = req.app.locals.data;
-  const userId = req.app.locals.user.id;
+app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserOwnsPost('new'), checkIfPostIsntComplete, function(req, res) {
+  const data = req.data;
+  const userId = req.user.id;
 
   if (data[0] === 'complete') {
     Post.updateOne(
@@ -754,11 +800,11 @@ app.post('/handlepost', urlencodedParser, parseData, checkSignin, checkIfUserIsV
 });
 
 app.post('/getposts', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
   const reqSource = data[0];
   const pageNumber = data[1] - 1;
   const postsPerPage = parseInt(process.env.POSTS_PER_PAGE);
-  const userId = req.app.locals.user.id;
+  const userId = req.user.id;
 
 
   if (reqSource === 'workpage_list') {
@@ -780,7 +826,7 @@ app.post('/getposts', urlencodedParser, parseData, checkSignin, checkIfUserIsUnb
 
     Post.find(query)
     .then(posts => {
-      generatePosts(posts, pageNumber)
+      return generatePosts(posts, pageNumber)
       .then(newPosts => {
         res.send({
           status: 'ok',
@@ -896,9 +942,9 @@ function generateResponses(requestUser, user) {
   return newResponses;
 }
 
-app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfPostIsntComplete, function(req, res) {
-  const data = req.app.locals.data;
-  const user = req.app.locals.user;
+app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserOwnsPost('add'), checkIfPostIsntComplete, function(req, res) {
+  const data = req.data;
+  const user = req.user;
 
   if (data[0] === 'add') {
     Post.findOne({id: data[1]})
@@ -1017,7 +1063,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
                         }
                       })
                     } else {
-                      reject('usr_not_found');
+                      resolve();
                     }
                   })
                 }))
@@ -1093,7 +1139,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
                     }
                   })
                 } else {
-                  res.send({ status: 'error' });
+                  res.send({ status: 'ok' });
                 }
               })
 
@@ -1156,7 +1202,7 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
                         }
                       })
                     } else {
-                      reject('usr_not_found');
+                      resolve();
                     }
                   })
                 }))
@@ -1187,10 +1233,10 @@ app.post('/respond', urlencodedParser, parseData, checkSignin, checkIfUserIsVeri
 });
 
 app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
 
   if (data[0] === 'viewpost_page') {
-    const postOwner = req.app.locals.user;
+    const postOwner = req.user;
     const postId = data[1];
     let responses = [];
 
@@ -1199,7 +1245,11 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, checkI
         const promise = new Promise((resolve, reject) => {
           User.findOne({id: e.userId})
           .then(user => {
-            
+            if (user === null) {
+              resolve(null);
+              return;
+            }
+
             resolve({
               userId: user.id,
               userName: user.name,
@@ -1211,6 +1261,7 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, checkI
               banned: user.banned
             })
           })
+          .catch(reject);
         })
 
         responses.push(promise);
@@ -1219,6 +1270,8 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, checkI
 
     Promise.all(responses)
     .then(responses => {
+      responses = responses.filter(response => response !== null);
+
       for (let i = responses.length - 1; i >= 0; i--) {
         if (checkIfUserBanEnded(responses[i].userId,responses[i].banned) === false) {
           responses.splice(i, 1)
@@ -1235,7 +1288,7 @@ app.post('/getresponsestouser', urlencodedParser, parseData, checkSignin, checkI
   }
 
   if (data[0] === 'view_user_page') {
-    const requestUser = req.app.locals.user;
+    const requestUser = req.user;
 
       User.findOne({id: data[1]})
       .then(user => {
@@ -1302,28 +1355,37 @@ function saveReport(target, type, action, userId) {
 }
 
 app.post('/report', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, function(req, res) {
-  const data = req.app.locals.data;
-  const user = req.app.locals.user;
+  const data = req.data;
+  const user = req.user;
 
   if (data[1] === 'post') {
     Post.findOne({id: data[2]})
     .then(post => {
-      saveReport(post, 'post', data[0], user.id)
+      return saveReport(post, 'post', data[0], user.id)
       .then(result => res.send(result));
     })
+    .catch(() => { res.send({status: 'error'}) });
   }
 
   if (data[1] === 'user') {
     User.findOne({id: data[2], verified: true})
     .then(user1 => {
-      if (checkIfUserBanEnded(user1.id, user1.banned) === true) {
-        saveReport(user1, 'user', data[0], user.id)
+      if (user1 !== null && checkIfUserBanEnded(user1.id, user1.banned) === true) {
+        return saveReport(user1, 'user', data[0], user.id)
         .then(result => res.send(result));
       }
+
+      res.send({status: 'error'});
     })
+    .catch(() => { res.send({status: 'error'}) });
   }
 
   if (data[0] === 'dismiss') {
+    if (user.moderator !== true) {
+      res.send({status: 'error'});
+      return;
+    }
+
     Report.deleteOne({id: data[1]})
     .then(result => {
       if (result.deletedCount === 1) {
@@ -1332,11 +1394,12 @@ app.post('/report', urlencodedParser, parseData, checkSignin, checkIfUserIsVerif
         res.send({status: 'error'});
       }
     })
+    .catch(() => { res.send({status: 'error'}) });
   }
 });
 
 app.post('/deletepost', urlencodedParser, parseData, checkSignin, checkIfUserIsVerified, checkIfUserIsUnbanned, checkIfUserIsModerator, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
 
   deletePost(data[0], res);
 });
@@ -1382,7 +1445,7 @@ function generateUsers(users, pageNumber) {
 }
 
 app.post('/getusers', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
-  const data = req.app.locals.data;
+  const data = req.data;
 
   if (data[0] === 'users_page') {
     const pageNumber = data[1] - 1;
@@ -1419,7 +1482,7 @@ app.post('/getusers', urlencodedParser, parseData, checkSignin, checkIfUserIsUnb
   }
 
   if (data[0] === 'view_user_page') {
-    const requestUser = req.app.locals.user;
+    const requestUser = req.user;
 
     User.findOne({id: data[1]})
     .then(user => {
@@ -1489,8 +1552,18 @@ function generateJobsResponses(user) {
     return new Promise((resolve, resject) => {
       Post.findOne({id: response.postId})
       .then(post => {
+        if (post === null) {
+          resolve(null);
+          return;
+        }
+
         User.findOne({id: post.userId})
         .then(postOwner => {
+          if (postOwner === null) {
+            resolve(null);
+            return;
+          }
+
           const newResponse = {
             post: {
               id: post.id,
@@ -1511,14 +1584,18 @@ function generateJobsResponses(user) {
 
           resolve(newResponse);
         })
+        .catch(resject);
       })
+      .catch(resject);
     })
   });
 
   return new Promise((resolve, reject) => {
     Promise.all(responses)
     .then(newResponses => {
-      for (let i = responses.length - 1; i >= 0; i--) {
+      newResponses = newResponses.filter(response => response !== null);
+
+      for (let i = newResponses.length - 1; i >= 0; i--) {
         if (checkIfUserBanEnded(newResponses[i].user.id, newResponses[i].user.banned) === false) {
           newResponses.splice(i, 1);
         }
@@ -1526,15 +1603,16 @@ function generateJobsResponses(user) {
 
       resolve(newResponses);
     })
+    .catch(reject);
   });
 }
 
-app.get('/getuserjobs', urlencodedParser, checkSignin, checkIfUserIsUnbanned, function(req, res) {
-  const user = req.app.locals.user;
+app.get('/getuserjobs', urlencodedParser, parseData, checkSignin, checkIfUserIsUnbanned, function(req, res) {
+  const user = req.user;
 
   Post.find({userId: user.id})
   .then(posts => {
-    generateJobsResponses(user)
+    return generateJobsResponses(user)
     .then(newResponses => {
       const newPosts = generateJobsPosts(user, posts);
       const sortedPosts = _.orderBy(newPosts, ['status'], ['desc']);
@@ -1548,6 +1626,7 @@ app.get('/getuserjobs', urlencodedParser, checkSignin, checkIfUserIsUnbanned, fu
       })
     })
   })
+  .catch(() => { res.send({status: 'error'}) });
 });
 
 
@@ -1579,6 +1658,11 @@ function generateReports(reports) {
     return new Promise((resolve, reject) => {
       User.findOne({id: report.userId})
       .then(reportOwner => {
+        if (reportOwner === null) {
+          resolve(null);
+          return;
+        }
+
         const newReportOwner = {
           id: reportOwner.id,
           pfp: reportOwner.pfp,
@@ -1592,6 +1676,11 @@ function generateReports(reports) {
         if (report.targetType === 'user') {
           User.findOne({id: report.targetId})
           .then(user => {
+            if (user === null) {
+              resolve(null);
+              return;
+            }
+
             resolve({
               id: report.id,
               type: 'user',
@@ -1607,11 +1696,17 @@ function generateReports(reports) {
               }
             })
           })
+          .catch(reject);
         }
 
         if (report.targetType === 'post') {
           Post.findOne({id: report.targetId})
           .then(post => {
+            if (post === null) {
+              resolve(null);
+              return;
+            }
+
             resolve({
               id: report.id,
               type: 'post',
@@ -1623,14 +1718,18 @@ function generateReports(reports) {
               }
             })
           })
+          .catch(reject);
         }
       })
+      .catch(reject);
     }) 
   })
 
   return new Promise((resolve, reject) => {
     Promise.all(newReports)
     .then(newReports => {
+      newReports = newReports.filter(report => report !== null);
+
       for (let i = newReports.length - 1; i >= 0; i--) {
         const reportOwner = newReports[i].reportOwner;
         
@@ -1648,10 +1747,11 @@ function generateReports(reports) {
 
       resolve(newReports)
     })
+    .catch(reject);
   });
 }
 
-app.get('/getusersandreports', urlencodedParser, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, function(req, res) {
+app.get('/getusersandreports', urlencodedParser, parseData, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, function(req, res) {
   User.find({
     verified: false,
     pfp: {$ne: undefined},
@@ -1667,7 +1767,7 @@ app.get('/getusersandreports', urlencodedParser, checkSignin, checkIfUserIsModer
       const newUsers = generateUnverifiedUsers(users);
       const newReports = generateReports(reports);
 
-      newReports
+      return newReports
       .then(newReports => {
         res.send({
           status: 'ok',
@@ -1677,10 +1777,11 @@ app.get('/getusersandreports', urlencodedParser, checkSignin, checkIfUserIsModer
       })
     })
   })
+  .catch(() => { res.send({status: 'error'}) });
 });
 
-app.post('/verifyuser', urlencodedParser, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, parseData, function(req, res) {
-  const data = req.app.locals.data;
+app.post('/verifyuser', urlencodedParser, parseData, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, function(req, res) {
+  const data = req.data;
 
   udpateUser(data[0], {verified: true})
   .then(result => {
@@ -1690,10 +1791,11 @@ app.post('/verifyuser', urlencodedParser, checkSignin, checkIfUserIsModerator, c
       res.send({status: 'error'});
     }
   })
+  .catch(() => { res.send({status: 'error'}) });
 });
 
-app.post('/banuser', urlencodedParser, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, parseData, function(req, res) {
-  const data = req.app.locals.data;
+app.post('/banuser', urlencodedParser, parseData, checkSignin, checkIfUserIsModerator, checkIfUserIsUnbanned, function(req, res) {
+  const data = req.data;
   const duration = data[1];
 
   let expirationDate = new Date();
@@ -1717,6 +1819,7 @@ app.post('/banuser', urlencodedParser, checkSignin, checkIfUserIsModerator, chec
       res.send({status: 'error'});
     }
   })
+  .catch(() => { res.send({status: 'error'}) });
 });
 
 // console.log(encryptPassword('123456'))
